@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BsDropdownModule, TabsModule, BsDatepickerModule, PaginationModule, ButtonsModule } from 'ngx-bootstrap';
+import { BsDropdownModule, TabsModule, BsDatepickerModule, PaginationModule, ButtonsModule, ModalModule } from 'ngx-bootstrap';
 import { RouterModule } from '@angular/router';
 import { JwtModule } from '@auth0/angular-jwt';
 import { NgxGalleryModule } from 'ngx-gallery';
@@ -30,60 +30,73 @@ import { MemberEditComponent } from './members/member-edit/member-edit.component
 import { MemberEditResolver } from './resolvers/member-edit.resolver';
 import { PreventUnsavedChanges } from './guards/prevent-unsaved-changes.guard';
 import { PhotoEditorComponent } from './members/photo-editor/photo-editor.component';
+import { ConfirmModalComponent } from './modals/confirm-modal/confirm-modal.component';
+import { SessionExpiredModalComponent } from './modals/session-expired-modal/session-expired-modal.component';
+import { TokenWatchService } from './services/token-watch.service';
 
 export const tokenGetter = () => {
     return localStorage.getItem('token');
 };
 
 @NgModule({
-   declarations: [
-      AppComponent,
-      NavComponent,
-      HomeComponent,
-      RegisterComponent,
-      MemberListComponent,
-      ListsComponent,
-      MessagesComponent,
-      MemberCardComponent,
-      MemberDetailComponent,
-      MemberEditComponent,
-      PhotoEditorComponent,
-      TimeAgoPipe
-   ],
-   imports: [
-      BrowserModule,
-      HttpClientModule,
-      FormsModule,
-      ReactiveFormsModule,
-      BsDropdownModule.forRoot(),
-      BsDatepickerModule.forRoot(),
-      PaginationModule.forRoot(),
-      TabsModule.forRoot(),
-      ButtonsModule.forRoot(),
-      RouterModule.forRoot(appRoutes),
-      NgxGalleryModule,
-      FileUploadModule,
-      JwtModule.forRoot({
-          config: {
-              tokenGetter: tokenGetter,
-              whitelistedDomains: ['localhost:5000'],
-              blacklistedRoutes: ['localhost:5000/api/auth']
-          }
-      })
-   ],
-   providers: [
-      AuthService,
-      ErrorInterceptorProvider,
-      AlertifyService,
-      AuthGuard,
-      UserService,
-      MemberDetailResolver,
-      MemberListResolver,
-      MemberEditResolver,
-      PreventUnsavedChanges
-   ],
-   bootstrap: [
-      AppComponent
-   ]
+    declarations: [
+        AppComponent,
+        NavComponent,
+        HomeComponent,
+        RegisterComponent,
+        MemberListComponent,
+        ListsComponent,
+        MessagesComponent,
+        MemberCardComponent,
+        MemberDetailComponent,
+        MemberEditComponent,
+        PhotoEditorComponent,
+        TimeAgoPipe,
+        ConfirmModalComponent,
+        SessionExpiredModalComponent
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        ReactiveFormsModule,
+        BsDropdownModule.forRoot(),
+        BsDatepickerModule.forRoot(),
+        ModalModule.forRoot(),
+        PaginationModule.forRoot(),
+        TabsModule.forRoot(),
+        ButtonsModule.forRoot(),
+        RouterModule.forRoot(appRoutes, {
+            onSameUrlNavigation: 'reload'
+        }),
+        NgxGalleryModule,
+        FileUploadModule,
+        JwtModule.forRoot({
+            config: {
+                tokenGetter: tokenGetter,
+                whitelistedDomains: ['localhost:5000'],
+                blacklistedRoutes: ['localhost:5000/api/auth']
+            }
+        })
+    ],
+    providers: [
+        AuthService,
+        ErrorInterceptorProvider,
+        AlertifyService,
+        AuthGuard,
+        UserService,
+        MemberDetailResolver,
+        MemberListResolver,
+        MemberEditResolver,
+        PreventUnsavedChanges,
+        TokenWatchService
+    ],
+    bootstrap: [
+        AppComponent
+    ],
+    entryComponents: [
+        ConfirmModalComponent,
+        SessionExpiredModalComponent
+    ]
 })
 export class AppModule { }

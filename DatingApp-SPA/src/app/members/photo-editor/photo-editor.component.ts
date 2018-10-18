@@ -5,6 +5,9 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { AlertifyService } from '../../services/alertify.service';
+import { BsModalService } from 'ngx-bootstrap';
+import { Subject } from 'rxjs';
+import { ConfirmModalComponent } from '../../modals/confirm-modal/confirm-modal.component';
 
 @Component({
     selector: 'app-photo-editor',
@@ -20,7 +23,7 @@ export class PhotoEditorComponent implements OnInit {
     currentMain: Photo;
 
     constructor(private authService: AuthService, private userService: UserService,
-        private alertify: AlertifyService) { }
+        private alertify: AlertifyService, private modalService: BsModalService) { }
 
     ngOnInit() {
         this.initializeUploader();
@@ -80,13 +83,22 @@ export class PhotoEditorComponent implements OnInit {
     }
 
     deletePhoto(id: number) {
-        this.alertify.confirm('Are you sure you want to delete this photo?', () => {
-            this.userService.deletePhoto(this.authService.decodedToken.nameid, id).subscribe(() => {
-                this.photos.splice(this.photos.findIndex(p => p.id === id), 1);
-                this.alertify.success('Photo has been deleted');
-            }, error => {
-                this.alertify.error('Failed to delete the photo');
-            });
+        const deleteSelectedPhoto = new Subject<boolean>();
+        const modal = this.modalService.show(ConfirmModalComponent, {
+            initialState: {
+                confirmMessage: 'Are you sure you want to delete this photo?'
+            }
+        });
+        modal.content.actionConfirmed = deleteSelectedPhoto;
+        deleteSelectedPhoto.asObservable().subscribe(result => {
+            if (result) {
+                this.userService.deletePhoto(this.authService.decodedToken.nameid, id).subscribe(() => {
+                    this.photos.splice(this.photos.findIndex(p => p.id === id), 1);
+                    this.alertify.success('Photo has been deleted');
+                }, error => {
+                    this.alertify.error('Failed to delete the photo');
+                });
+            }
         });
     }
 }

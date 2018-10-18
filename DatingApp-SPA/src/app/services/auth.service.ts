@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from '../../environments/environment';
 import { User } from '../models/user';
+import { SessionStatus } from '../models/session-status.enum';
 
 @Injectable({
     providedIn: 'root'
@@ -47,6 +48,21 @@ export class AuthService {
     loggedIn() {
         const token = localStorage.getItem('token');
         return !this.jwtHelper.isTokenExpired(token);
+    }
+
+    getCurrenSessionStatus(): SessionStatus {
+        const token = localStorage.getItem('token');
+        if (token) {
+            return this.jwtHelper.isTokenExpired(token) ? SessionStatus.TokenExpired : SessionStatus.LoggedIn;
+        }
+        return SessionStatus.LoggedOut;
+    }
+
+    removeStoredAuthData(): void {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.decodedToken = null;
+        this.currentUser = null;
     }
 
 }

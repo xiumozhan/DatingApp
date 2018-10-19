@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthService } from './services/auth.service';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { User } from './models/user';
-import { TokenWatchService } from './services/token-watch.service';
+import { SessionWatchService } from './services/session-watch.service';
 
 @Component({
     selector: 'app-root',
@@ -12,7 +12,7 @@ import { TokenWatchService } from './services/token-watch.service';
 export class AppComponent implements OnInit, OnDestroy {
     jwtHelper = new JwtHelperService();
 
-    constructor(private authService: AuthService, private tokenWatchService: TokenWatchService) {}
+    constructor(private authService: AuthService, private sessionWatchService: SessionWatchService) {}
 
     ngOnInit() {
         const token = localStorage.getItem('token');
@@ -20,7 +20,7 @@ export class AppComponent implements OnInit, OnDestroy {
         if (token) {
             if (!this.jwtHelper.isTokenExpired(token)) {
                 this.authService.decodedToken = this.jwtHelper.decodeToken(token);
-                this.tokenWatchService.startWatching();
+                this.sessionWatchService.startWatching();
                 if (user) {
                     this.authService.currentUser = user;
                     this.authService.changeMemberPhoto(user.photoUrl);
@@ -32,6 +32,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.tokenWatchService.stopWatching();
+        this.sessionWatchService.stopWatching();
     }
 }

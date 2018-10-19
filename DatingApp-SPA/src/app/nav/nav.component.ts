@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { AlertifyService } from '../services/alertify.service';
 import { Router } from '@angular/router';
-import { TokenWatchService } from '../services/token-watch.service';
+import { SessionWatchService } from '../services/session-watch.service';
 
 @Component({
     selector: 'app-nav',
@@ -14,7 +14,7 @@ export class NavComponent implements OnInit {
     photoUrl: string;
 
     constructor(public authService: AuthService, private alertify: AlertifyService,
-        private router: Router, private tokenWatchService: TokenWatchService) { }
+        private router: Router, private sessionWatchService: SessionWatchService) { }
 
     ngOnInit() {
         this.authService.currentPhotoUrl.subscribe(photoUrl => {
@@ -28,7 +28,7 @@ export class NavComponent implements OnInit {
         }, error => {
             this.alertify.error(error);
         }, () => {
-            this.tokenWatchService.startWatching();
+            this.sessionWatchService.startWatching();
             this.router.navigate(['/members']);
         });
     }
@@ -38,7 +38,7 @@ export class NavComponent implements OnInit {
     }
 
     logout() {
-        this.tokenWatchService.stopWatching();
+        this.sessionWatchService.stopWatching();
         this.authService.removeStoredAuthData();
         this.alertify.message('logged out');
         this.router.navigate(['/home']);

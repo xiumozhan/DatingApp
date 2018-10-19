@@ -8,6 +8,7 @@ import { JwtModule } from '@auth0/angular-jwt';
 import { NgxGalleryModule } from 'ngx-gallery';
 import { FileUploadModule } from 'ng2-file-upload';
 import { TimeAgoPipe } from 'time-ago-pipe';
+import { UserIdleModule } from 'angular-user-idle';
 
 import { AppComponent } from './app.component';
 import { NavComponent } from './nav/nav.component';
@@ -32,7 +33,8 @@ import { PreventUnsavedChanges } from './guards/prevent-unsaved-changes.guard';
 import { PhotoEditorComponent } from './members/photo-editor/photo-editor.component';
 import { ConfirmModalComponent } from './modals/confirm-modal/confirm-modal.component';
 import { SessionExpiredModalComponent } from './modals/session-expired-modal/session-expired-modal.component';
-import { TokenWatchService } from './services/token-watch.service';
+import { SessionWatchService } from './services/session-watch.service';
+import { InactivityModalComponent } from './modals/inactivity-modal/inactivity-modal.component';
 
 export const tokenGetter = () => {
     return localStorage.getItem('token');
@@ -53,7 +55,8 @@ export const tokenGetter = () => {
         PhotoEditorComponent,
         TimeAgoPipe,
         ConfirmModalComponent,
-        SessionExpiredModalComponent
+        SessionExpiredModalComponent,
+        InactivityModalComponent
     ],
     imports: [
         BrowserModule,
@@ -77,6 +80,11 @@ export const tokenGetter = () => {
                 whitelistedDomains: ['localhost:5000'],
                 blacklistedRoutes: ['localhost:5000/api/auth']
             }
+        }),
+        UserIdleModule.forRoot({
+            idle: 60,
+            timeout: 60,
+            ping: 60
         })
     ],
     providers: [
@@ -89,14 +97,15 @@ export const tokenGetter = () => {
         MemberListResolver,
         MemberEditResolver,
         PreventUnsavedChanges,
-        TokenWatchService
+        SessionWatchService
     ],
     bootstrap: [
         AppComponent
     ],
     entryComponents: [
         ConfirmModalComponent,
-        SessionExpiredModalComponent
+        SessionExpiredModalComponent,
+        InactivityModalComponent
     ]
 })
 export class AppModule { }

@@ -1,0 +1,10 @@
+<div class="modal-body clearfix">
+    <div class="modal-text mt-2">
+        <p>System has detected you have been idle for a long time.</p>
+        <p>You will be automatically logged out after {{remainingTime}} seconds if you don't decide to keep browsing</p>
+    </div>
+    <div class="text-right">
+        <button type="button" class="btn btn-default mr-3" (click)="logoutNow()">I want to log out now</button>
+        <button type="button" class="btn btn-primary" (click)="wantToKeepBrowsing()">I want to keep browsing</button>
+    </div>
+</div>

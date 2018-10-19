@@ -1,16 +1,16 @@
 /* tslint:disable:no-unused-variable */
 
 import { TestBed, async, inject } from '@angular/core/testing';
-import { TokenWatchService } from './token-watch.service';
+import { SessionWatchService } from './session-watch.service';
 
 describe('Service: TokenWatch', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TokenWatchService]
+            providers: [SessionWatchService]
         });
     });
 
-    it('should ...', inject([TokenWatchService], (service: TokenWatchService) => {
+    it('should ...', inject([SessionWatchService], (service: SessionWatchService) => {
         expect(service).toBeTruthy();
     }));
 });

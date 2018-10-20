@@ -6,8 +6,8 @@ import { BsModalService, BsModalRef } from 'ngx-bootstrap';
 import { SessionExpiredModalComponent } from '../modals/session-expired-modal/session-expired-modal.component';
 import { Router } from '@angular/router';
 import { SessionStatus } from '../models/session-status.enum';
-import { UserIdleService } from 'angular-user-idle';
 import { InactivityModalComponent } from '../modals/inactivity-modal/inactivity-modal.component';
+import { Idle, DEFAULT_INTERRUPTSOURCES, AutoResume } from '@ng-idle/core';
 
 @Injectable({
     providedIn: 'root'
@@ -15,15 +15,15 @@ import { InactivityModalComponent } from '../modals/inactivity-modal/inactivity-
 export class SessionWatchService {
     private timer: Observable<SessionStatus>;
     private sessionChecking: Subscription;
-    private longTimeInactivityChecking: Subscription;
-    private longTimeInactivityTimeoutChecking: Subscription;
     private isWatching = false;
     private hasSessionExpiredPreviously = false;
     private hasUserIdleForTooLongPreviously: boolean;
     private modal: BsModalRef;
+    private inactivityMaxTime = 30 * 60;
+    private idleTimeout = 5 * 60;
 
-    constructor(private authService: AuthService, private modalService: BsModalService,
-        private router: Router, private userIdle: UserIdleService) { }
+    constructor(private authService: AuthService, private modalService: BsModalService, private router: Router,
+        private idle: Idle) { }
 
     startWatching(): void {
         if (!this.isWatching) {
@@ -37,10 +37,16 @@ export class SessionWatchService {
         if (this.isWatching) {
             this.isWatching = false;
             this.sessionChecking.unsubscribe();
-            this.longTimeInactivityChecking.unsubscribe();
-            this.longTimeInactivityTimeoutChecking.unsubscribe();
-            this.userIdle.stopWatching();
+            this.stopUserInactivityWatching();
         }
+    }
+
+    private stopUserInactivityWatching(): void {
+        this.idle.onIdleEnd.unsubscribe();
+        this.idle.onTimeoutWarning.unsubscribe();
+        this.idle.onTimeout.unsubscribe();
+        this.idle.stop();
+        this.idle.ngOnDestroy();
     }
 
     private startTokenWatching(): void {
@@ -54,17 +60,35 @@ export class SessionWatchService {
     }
 
     private startUserInactivityWatching(): void {
-        this.userIdle.startWatching();
+        this.configureUserIdleParameters();
         this.hasUserIdleForTooLongPreviously = false;
-        this.longTimeInactivityChecking = this.userIdle.onTimerStart().subscribe(count => {
-            this.openUserIdleForToLongModal(count);
+        this.configureUserIdleHandlers();
+        this.idle.watch();
+    }
+
+    private configureUserIdleParameters(): void {
+        this.idle.setIdle(this.inactivityMaxTime);
+        this.idle.setTimeout(this.idleTimeout);
+        this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
+        this.idle.setAutoResume(AutoResume.notIdle);
+    }
+
+    private configureUserIdleHandlers(): void {
+        this.idle.onIdleEnd.subscribe(() => {
+            if (this.modal) {
+                this.modal.hide();
+            }
+            this.idle.watch();
         });
-        this.longTimeInactivityTimeoutChecking = this.userIdle.onTimeout().subscribe(() => {
+        this.idle.onTimeoutWarning.subscribe(countdown => {
+            this.openUserIdleForToLongModal(countdown);
+        });
+        this.idle.onTimeout.subscribe(() => {
             this.handleUserInactivityTimeout();
         });
     }
 
-    private openUserIdleForToLongModal(count: number): void {
+    private openUserIdleForToLongModal(countdown: number): void {
         if (!this.hasUserIdleForTooLongPreviously) {
             const keepBrowsingAfterLongTimeInactivity = new Subject<boolean>();
             this.hasUserIdleForTooLongPreviously = true;
@@ -79,12 +103,12 @@ export class SessionWatchService {
                 this.handleIfKeepBrowsingOrNot(keepBrowsing);
             });
         }
-        this.modal.content.remainingTime = this.userIdle.getConfigValue().timeout - count;
+        this.modal.content.remainingTime = countdown;
     }
 
     private handleIfKeepBrowsingOrNot(keepBrowsing: boolean): void {
         if (keepBrowsing) {
-            this.userIdle.resetTimer();
+            this.idle.watch();
             this.hasUserIdleForTooLongPreviously = false;
         } else {
             this.stopWatching();

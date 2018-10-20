@@ -8,7 +8,7 @@ import { JwtModule } from '@auth0/angular-jwt';
 import { NgxGalleryModule } from 'ngx-gallery';
 import { FileUploadModule } from 'ng2-file-upload';
 import { TimeAgoPipe } from 'time-ago-pipe';
-import { UserIdleModule } from 'angular-user-idle';
+import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 
 import { AppComponent } from './app.component';
 import { NavComponent } from './nav/nav.component';
@@ -81,11 +81,7 @@ export const tokenGetter = () => {
                 blacklistedRoutes: ['localhost:5000/api/auth']
             }
         }),
-        UserIdleModule.forRoot({
-            idle: 60,
-            timeout: 60,
-            ping: 60
-        })
+        NgIdleKeepaliveModule.forRoot()
     ],
     providers: [
         AuthService,

@@ -21,6 +21,9 @@ export class SessionWatchService {
     private modal: BsModalRef;
     private inactivityMaxTime = 30 * 60;
     private idleTimeout = 5 * 60;
+    private onIdleEnd: Subscription;
+    private onTimeoutWarning: Subscription;
+    private onTimeout: Subscription;
 
     constructor(private authService: AuthService, private modalService: BsModalService, private router: Router,
         private idle: Idle) { }
@@ -42,9 +45,9 @@ export class SessionWatchService {
     }
 
     private stopUserInactivityWatching(): void {
-        this.idle.onIdleEnd.unsubscribe();
-        this.idle.onTimeoutWarning.unsubscribe();
-        this.idle.onTimeout.unsubscribe();
+        this.onIdleEnd.unsubscribe();
+        this.onTimeoutWarning.unsubscribe();
+        this.onTimeout.unsubscribe();
         this.idle.stop();
         this.idle.ngOnDestroy();
     }
@@ -74,16 +77,16 @@ export class SessionWatchService {
     }
 
     private configureUserIdleHandlers(): void {
-        this.idle.onIdleEnd.subscribe(() => {
+        this.onIdleEnd = this.idle.onIdleEnd.subscribe(() => {
             if (this.modal) {
                 this.modal.hide();
             }
             this.idle.watch();
         });
-        this.idle.onTimeoutWarning.subscribe(countdown => {
+        this.onTimeoutWarning = this.idle.onTimeoutWarning.subscribe(countdown => {
             this.openUserIdleForToLongModal(countdown);
         });
-        this.idle.onTimeout.subscribe(() => {
+        this.onTimeout = this.idle.onTimeout.subscribe(() => {
             this.handleUserInactivityTimeout();
         });
     }

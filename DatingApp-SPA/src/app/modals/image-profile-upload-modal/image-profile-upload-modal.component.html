@@ -1,0 +1,36 @@
+<div class="img-update-container">
+    <div class="upload-image-wrapper">
+        <label for="image-upload" class="btn-img-upload">Upload An Image</label>
+        <input id="image-upload" type="file" (change)="fileChangeEvent($event)" />
+        <button class="link-button pull-right" (click)="close()">
+            <i class="fa fa-close fa-3x"></i>
+        </button>
+        <button *ngIf="hasImageUploaded" class="link-button pull-right mr-3" (click)="uploadImage()">
+            <i class="fa fa-upload fa-3x"></i>
+        </button>
+    </div>
+    <div class="row image-edit-panel">
+        <div class="col-sm-6">
+            <div *ngIf="!hasImageUploaded" class="no-img-tab">
+                <p class="no-img-text text-center">No Image Uploaded Yet</p>
+            </div>
+            <image-cropper 
+                class="image-cropper"
+                #imageCropper
+                *ngIf="hasImageUploaded"
+                [imageChangedEvent]="imageChangedEvent" 
+                [maintainAspectRatio]="true" 
+                [aspectRatio]="1 / 1"
+                [resizeToWidth]="500" 
+                format="png" 
+                (imageCropped)="imageCropped($event)" 
+                (imageLoaded)="imageLoaded()"
+                (loadImageFailed)="loadImageFailed()">
+            </image-cropper>
+        </div>
+        <div class="col-sm-6 text-center">
+            <p class="preview-text">Preview</p>
+            <img class="preview-img" [src]="hasImageUploaded? croppedImage : currentImageProfileUrl"/>
+        </div>
+    </div>
+</div>

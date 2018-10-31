@@ -64,9 +64,7 @@ namespace DatingApp.API.Controllers
                 {
                     var uploadParams = new ImageUploadParams()
                     {
-                        File = new FileDescription(file.Name, stream),
-                        Transformation = new Transformation()
-                            .Width(500).Height(500).Crop("fill").Gravity("face")
+                        File = new FileDescription(file.Name, stream)
                     };
                     uploadResult = cloudinary.Upload(uploadParams);
                 }
@@ -75,10 +73,6 @@ namespace DatingApp.API.Controllers
             photoForCreationDto.Url = uploadResult.Uri.ToString();
             photoForCreationDto.PublicId = uploadResult.PublicId;
             var photo = mapper.Map<Photo>(photoForCreationDto);
-            if (!userFromRepo.Photos.Any(u => u.IsMain))
-            {
-                photo.IsMain = true;
-            }
 
             userFromRepo.Photos.Add(photo);
             
@@ -88,36 +82,6 @@ namespace DatingApp.API.Controllers
                 return CreatedAtRoute("GetPhoto", new { id = photo.Id }, photoToReturn);
             }
             return BadRequest("Could not add the photo");
-        }
-
-        [HttpPost("{id}/setMain")]
-        public async Task<IActionResult> SetMainPhoto(int userId, int id)
-        {
-            if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
-            {
-                return Unauthorized();
-            }
-
-            var user = await repository.GetUser(userId);
-            if (!user.Photos.Any(p => p.Id == id))
-            {
-                return Unauthorized();
-            }
-
-            var photoFromRepo = await repository.GetPhoto(id);
-            if (photoFromRepo.IsMain)
-            {
-                return BadRequest("This is already the main photo");
-            }
-
-            var currentMainPhoto = await repository.GetMainPhotoForUser(userId);
-            currentMainPhoto.IsMain = false;
-            photoFromRepo.IsMain = true;
-
-            if (await repository.SaveAll()) {
-                return NoContent();
-            }
-            return BadRequest("Could not set photo to main");
         }
 
         [HttpDelete("{id}")]
@@ -135,11 +99,6 @@ namespace DatingApp.API.Controllers
             }
 
             var photoFromRepo = await repository.GetPhoto(id);
-            if (photoFromRepo.IsMain)
-            {
-                return BadRequest("You can't delete your main photo");
-            }
-
             if (photoFromRepo.PublicID != null) {
                 var deleteParams = new DeletionParams(photoFromRepo.PublicID);
                 var result = cloudinary.Destroy(deleteParams);
@@ -157,6 +116,59 @@ namespace DatingApp.API.Controllers
             }
 
             return BadRequest("Failed to delete the photo");
+        }
+
+        [HttpPut("setAvatar")]
+        public async Task<IActionResult> SetProfileImage(int userId, [FromForm]PhotoForCreationDto photoForCreationDto)
+        {
+            if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            {
+                return Unauthorized();
+            }
+
+            var user = await repository.GetUser(userId);
+            var file = photoForCreationDto.File;
+            var uploadResult = new ImageUploadResult();
+            Photo existingAvatar = user.Photos.FirstOrDefault(p => p.IsAvatar);
+            if (file.Length > 0)
+            {
+                using (var stream = file.OpenReadStream())
+                {
+                    ImageUploadParams uploadParams;
+                    if (existingAvatar != null)
+                    {
+                        uploadParams = new ImageUploadParams()
+                        {
+                            File = new FileDescription(file.Name, stream),
+                            PublicId = existingAvatar.PublicID
+                        };
+                    }
+                    else
+                    {
+                        uploadParams = new ImageUploadParams()
+                        {
+                            File = new FileDescription(file.Name, stream)
+                        };
+                    }
+                    uploadResult = cloudinary.Upload(uploadParams);
+                }
+            }
+
+            photoForCreationDto.Url = uploadResult.Uri.ToString();
+            photoForCreationDto.PublicId = uploadResult.PublicId;
+            var photo = mapper.Map<Photo>(photoForCreationDto);
+            photo.IsAvatar = true;
+            if (existingAvatar != null)
+            {
+                user.Photos.Remove(existingAvatar);
+            }
+            user.Photos.Add(photo);
+            if (await repository.SaveAll())
+            {
+                var photoToReturn = mapper.Map<PhotoForReturnDto>(photo);
+                return CreatedAtRoute("GetPhoto", new { id = photo.Id }, photoToReturn);
+            }
+            return BadRequest("Could not add the photo");
         }
     }
 }

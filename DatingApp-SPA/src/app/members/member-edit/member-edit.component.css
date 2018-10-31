@@ -1,0 +1,36 @@
+.card-img {
+    position: relative;
+}
+
+.update-profile-image-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 0;
+    margin-right: auto;
+    margin-left: auto;
+    visibility: hidden;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.card-img:hover .update-profile-image-container {
+    top: 70%;
+    height: 30%;
+    visibility: visible;
+    transition: all 0.3s ease-in-out;
+}
+
+.card-img:hover .update-profile-image {
+    background: none;
+}
+
+.card-img:hover .update-profile-image button {
+    color: rgb(238, 228, 228);
+}
+
+.card-img:hover .update-profile-image i {
+    color: white;
+    opacity: 0.6;
+}

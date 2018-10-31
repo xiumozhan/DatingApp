@@ -56,7 +56,20 @@
     padding: 15px 0;
 }
 
-.modal {
+.modal-dialog {
     display: flex;
-    top: 40%;
+    top: 45%;
+    transform: translate(0, -50%) !important;
+}
+
+.link-button {
+    background: none !important;
+    border: none; 
+    padding: 0 !important;
+    font: inherit;
+    cursor: pointer;
+}
+
+.gray-modal .modal-content {
+    background-color: rgb(253, 251, 251);
 }

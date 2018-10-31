@@ -23,7 +23,7 @@ export class AppComponent implements OnInit, OnDestroy {
                 this.sessionWatchService.startWatching();
                 if (user) {
                     this.authService.currentUser = user;
-                    this.authService.changeMemberPhoto(user.photoUrl);
+                    this.authService.changeMemberAvatar(user.avatar.url);
                 }
             } else {
                 this.authService.removeStoredAuthData();

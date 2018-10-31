@@ -5,6 +5,10 @@ import { AlertifyService } from '../../services/alertify.service';
 import { NgForm } from '@angular/forms';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
+import { environment } from 'src/environments/environment';
+import { BsModalService } from 'ngx-bootstrap';
+import { ImageProfileUploadModalComponent } from 'src/app/modals/image-profile-upload-modal/image-profile-upload-modal.component';
+import { Photo } from 'src/app/models/photo';
 
 @Component({
     selector: 'app-member-edit',
@@ -13,8 +17,10 @@ import { AuthService } from '../../services/auth.service';
 })
 export class MemberEditComponent implements OnInit {
     user: User;
-    photoUrl: string;
+    avatarUrl: string;
+    baseUrl = environment.apiUrl;
     @ViewChild('editForm') editForm: NgForm;
+    @ViewChild('imageProfile') imageProfile: HTMLElement;
     @HostListener('window:beforeunload', ['$event'])
     unloadNotification($event: any) {
         if (this.editForm.dirty) {
@@ -23,14 +29,14 @@ export class MemberEditComponent implements OnInit {
     }
 
     constructor(private route: ActivatedRoute, private alertify: AlertifyService,
-        private userService: UserService, private authService: AuthService) { }
+        private userService: UserService, private authService: AuthService, private modalService: BsModalService) { }
 
     ngOnInit() {
         this.route.data.subscribe(data => {
             this.user = data['user'];
         });
-        this.authService.currentPhotoUrl.subscribe(photoUrl => {
-            this.photoUrl = photoUrl || `../${this.authService.emptyPhotoUrl}`;
+        this.authService.currentAvatarUrl.subscribe(photoUrl => {
+            this.avatarUrl = photoUrl || `../${this.authService.emptyPhotoUrl}`;
         });
     }
 
@@ -44,7 +50,21 @@ export class MemberEditComponent implements OnInit {
     }
 
     updateMainPhoto(photoUrl) {
-        this.user.photoUrl = photoUrl;
+        this.user.avatar.url = photoUrl;
+    }
+
+    openImageProfileUpdateModal(): void {
+        this.modalService.show(ImageProfileUploadModalComponent, {
+            initialState: {
+                currentImageProfileUrl: this.avatarUrl,
+                currentUserId: this.user.id
+            },
+            class: 'modal-lg gray-modal',
+            backdrop: true,
+            ignoreBackdropClick: true,
+            animated: true,
+            keyboard: false
+        });
     }
 
 }

@@ -11,14 +11,14 @@ import { SessionWatchService } from '../services/session-watch.service';
 })
 export class NavComponent implements OnInit {
     model: any = {};
-    photoUrl: string;
+    avatarUrl: string;
 
     constructor(public authService: AuthService, private alertify: AlertifyService,
         private router: Router, private sessionWatchService: SessionWatchService) { }
 
     ngOnInit() {
-        this.authService.currentPhotoUrl.subscribe(photoUrl => {
-            this.photoUrl = photoUrl || this.authService.emptyPhotoUrl;
+        this.authService.currentAvatarUrl.subscribe(photoUrl => {
+            this.avatarUrl = photoUrl || this.authService.emptyPhotoUrl;
         });
     }
 

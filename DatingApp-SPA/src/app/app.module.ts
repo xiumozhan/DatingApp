@@ -9,6 +9,7 @@ import { NgxGalleryModule } from 'ngx-gallery';
 import { FileUploadModule } from 'ng2-file-upload';
 import { TimeAgoPipe } from 'time-ago-pipe';
 import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
+import { ImageCropperModule } from 'ngx-image-cropper';
 
 import { AppComponent } from './app.component';
 import { NavComponent } from './nav/nav.component';
@@ -35,6 +36,7 @@ import { ConfirmModalComponent } from './modals/confirm-modal/confirm-modal.comp
 import { SessionExpiredModalComponent } from './modals/session-expired-modal/session-expired-modal.component';
 import { SessionWatchService } from './services/session-watch.service';
 import { InactivityModalComponent } from './modals/inactivity-modal/inactivity-modal.component';
+import { ImageProfileUploadModalComponent } from './modals/image-profile-upload-modal/image-profile-upload-modal.component';
 
 export const tokenGetter = () => {
     return localStorage.getItem('token');
@@ -56,7 +58,8 @@ export const tokenGetter = () => {
         TimeAgoPipe,
         ConfirmModalComponent,
         SessionExpiredModalComponent,
-        InactivityModalComponent
+        InactivityModalComponent,
+        ImageProfileUploadModalComponent
     ],
     imports: [
         BrowserModule,
@@ -81,7 +84,8 @@ export const tokenGetter = () => {
                 blacklistedRoutes: ['localhost:5000/api/auth']
             }
         }),
-        NgIdleKeepaliveModule.forRoot()
+        NgIdleKeepaliveModule.forRoot(),
+        ImageCropperModule
     ],
     providers: [
         AuthService,
@@ -101,7 +105,8 @@ export const tokenGetter = () => {
     entryComponents: [
         ConfirmModalComponent,
         SessionExpiredModalComponent,
-        InactivityModalComponent
+        InactivityModalComponent,
+        ImageProfileUploadModalComponent
     ]
 })
 export class AppModule { }

@@ -9,14 +9,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DatingApp.API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20181005224953_ExtendedUserClass")]
-    partial class ExtendedUserClass
+    [Migration("20181030040931_ChangeMainPhotoToAvatar")]
+    partial class ChangeMainPhotoToAvatar
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.4-rtm-31024");
+                .HasAnnotation("ProductVersion", "2.1.4-rtm-31024")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("DatingApp.API.Models.Photo", b =>
                 {
@@ -27,7 +28,9 @@ namespace DatingApp.API.Migrations
 
                     b.Property<string>("Description");
 
-                    b.Property<bool>("IsMain");
+                    b.Property<bool>("IsAvatar");
+
+                    b.Property<string>("PublicID");
 
                     b.Property<string>("Url");
 

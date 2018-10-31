@@ -12,6 +12,7 @@ import { NgxGalleryOptions, NgxGalleryImage, NgxGalleryAnimation } from 'ngx-gal
 })
 export class MemberDetailComponent implements OnInit {
     user: User;
+    avatarUrl: string;
     galleryOptions: NgxGalleryOptions[];
     galleryImages: NgxGalleryImage[];
 
@@ -21,6 +22,9 @@ export class MemberDetailComponent implements OnInit {
     ngOnInit() {
         this.route.data.subscribe(data => {
             this.user = data['user'];
+            if ( this.user.avatar !== null ) {
+                this.avatarUrl = this.user.avatar.url;
+            }
         });
 
         this.galleryOptions = [

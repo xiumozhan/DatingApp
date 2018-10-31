@@ -8,10 +8,14 @@ import { User } from '../../models/user';
 })
 export class MemberCardComponent implements OnInit {
     @Input() user: User;
+    avatarUrl: string;
 
     constructor() { }
 
     ngOnInit() {
+        if (this.user.avatar !== null) {
+            this.avatarUrl = this.user.avatar.url;
+        }
     }
 
 }

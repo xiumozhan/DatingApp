@@ -10,6 +10,7 @@ import { FileUploadModule } from 'ng2-file-upload';
 import { TimeAgoPipe } from 'time-ago-pipe';
 import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { ImageCropperModule } from 'ngx-image-cropper';
+import { NgxImageGalleryModule } from 'ngx-image-gallery';
 
 import { AppComponent } from './app.component';
 import { NavComponent } from './nav/nav.component';
@@ -85,7 +86,8 @@ export const tokenGetter = () => {
             }
         }),
         NgIdleKeepaliveModule.forRoot(),
-        ImageCropperModule
+        ImageCropperModule,
+        NgxImageGalleryModule,
     ],
     providers: [
         AuthService,

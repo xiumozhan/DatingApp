@@ -1,11 +1,30 @@
 <div class="row">
-    <div class="col-sm-2" *ngFor="let photo of photos">
-        <img src="{{photo.url}}" alt="" class="img-thumbnail p-1">
-        <div class="text-center">
-            <button type="button" class="btn btn-sm btn-danger" 
-                (click)="deletePhoto(photo.id)">
-                <i class="fa fa-trash-o"></i>
-            </button>
+    <div class="photo-manipulate-panel">
+        <button class="link-button float-right mr-3" [disabled]="selectedPhotoIds.size === 0" (click)="deletePhoto(selectedPhotoIds)">
+            <i class="fa fa-trash fa-2x"></i>
+        </button>
+        <div class="float-right mr-3">
+            <input class="large-checkbox" type="checkbox" name="selectOrDeselectAll" id="selectOrDeselectAll"
+                data-md-icheck (change)="selectOrDeselectAll($event)">
+            <label class="select-deselect-label" for="selectOrDeselectAll">&nbsp;Select/Deselect All</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-3 no-padding" *ngFor="let photo of photos; index as i">
+        <div class="thumbnail-img-wrapper">
+            <a (click)="openGallery(i)">
+                <img src="{{photo.thumbnailUrl || photo.url}}" alt="" class="img-thumbnail p-1">
+            </a>
+            <div class="round-icon-check-container">
+                <div class="round-icon-check">
+                    <input type="checkbox" name="image-selector-{{i}}" id="image-selector-{{i}}" data-md-icheck
+                        [(ngModel)]="photo.selected"
+                        (change)="processImageSelection($event, photo.id)">
+                    <label for="image-selector-{{i}}"></label>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -76,3 +95,8 @@
     </div>
 
 </div>
+
+<ngx-image-gallery 
+    [images]="images" 
+    [conf]="conf">
+</ngx-image-gallery>

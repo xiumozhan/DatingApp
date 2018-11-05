@@ -25,6 +25,11 @@ namespace DatingApp.API.Data
             context.Remove(entity);
         }
 
+        public void Delete<T>(List<T> entities) where T : class
+        {
+            context.RemoveRange(entities);
+        }
+
         public async Task<Photo> GetAvatarForUser(int userId)
         {
             var mainPhoto = await context.Photos
@@ -37,6 +42,12 @@ namespace DatingApp.API.Data
         {
             var photo = await context.Photos.FirstOrDefaultAsync( p => p.Id == id );
             return photo;
+        }
+
+        public async Task<List<Photo>> GetPhotos(List<int> ids)
+        {
+            var photos = await context.Photos.Where( photo => ids.Contains(photo.Id) ).ToListAsync();
+            return photos;
         }
 
         public async Task<User> GetUser(int id)

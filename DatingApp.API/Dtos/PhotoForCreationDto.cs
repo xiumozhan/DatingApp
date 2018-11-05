@@ -10,6 +10,10 @@ namespace DatingApp.API.Dtos
         public string Description { get; set; }
         public DateTime DateAdded { get; set; }
         public string PublicId { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public string ThumbnailUrl { get; set; }
+        public string ThumbnailPublicId { get; set; }
 
         public PhotoForCreationDto()
         {

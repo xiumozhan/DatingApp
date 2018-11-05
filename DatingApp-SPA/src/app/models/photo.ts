@@ -4,4 +4,8 @@ export interface Photo {
     description: string;
     dateAdded: Date;
     isAvatar: boolean;
+    width: number;
+    height: number;
+    thumbnailUrl: string;
+    selected?: boolean;
 }

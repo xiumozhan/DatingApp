@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -72,6 +74,24 @@ namespace DatingApp.API.Controllers
 
             photoForCreationDto.Url = uploadResult.Uri.ToString();
             photoForCreationDto.PublicId = uploadResult.PublicId;
+            photoForCreationDto.Width = uploadResult.Width;
+            photoForCreationDto.Height = uploadResult.Height;
+
+            if (photoForCreationDto.Height != photoForCreationDto.Width)
+            {
+                var thumbnailUploadResult = new ImageUploadResult();
+                using (var stream = file.OpenReadStream())
+                {
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(file.Name, stream),
+                        Transformation = new Transformation().Width(200).Height(200).Crop("thumb").Gravity("face")
+                    };
+                    thumbnailUploadResult = cloudinary.Upload(uploadParams);
+                }
+                photoForCreationDto.ThumbnailUrl = thumbnailUploadResult.Uri.ToString();
+                photoForCreationDto.ThumbnailPublicId = thumbnailUploadResult.PublicId;
+            }
             var photo = mapper.Map<Photo>(photoForCreationDto);
 
             userFromRepo.Photos.Add(photo);
@@ -84,38 +104,64 @@ namespace DatingApp.API.Controllers
             return BadRequest("Could not add the photo");
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePhoto(int userId, int id)
+        [HttpDelete]
+        public async Task<IActionResult> DeletePhoto(int userId, [FromQuery(Name="ids")]string ids)
         {
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
             {
                 return Unauthorized();
             }
 
+            List<int> deletedPhotoIds = ids.Split(',').Select( idString => Convert.ToInt32(idString) ).ToList();
             var user = await repository.GetUser(userId);
-            if (!user.Photos.Any(p => p.Id == id))
+            List<int> authorizedPhotoIds = new List<int>();
+            List<int> unauthorizedPhotoIds = new List<int>(); 
+            foreach (int id in deletedPhotoIds)
             {
-                return Unauthorized();
+                if (!user.Photos.Any(p => p.Id == id))
+                {
+                    unauthorizedPhotoIds.Add(id);
+                    continue;
+                }
+                authorizedPhotoIds.Add(id);
             }
 
-            var photoFromRepo = await repository.GetPhoto(id);
-            if (photoFromRepo.PublicID != null) {
-                var deleteParams = new DeletionParams(photoFromRepo.PublicID);
-                var result = cloudinary.Destroy(deleteParams);
-                if (result.Result == "ok") {
-                    repository.Delete(photoFromRepo);
+            var photosFromRepo = await repository.GetPhotos(authorizedPhotoIds);
+            var deleteParams = new DelResParams()
+            {
+                PublicIds = photosFromRepo.Select( photo => photo.PublicID ).ToList()
+            };
+            var photoDeletionResults = cloudinary.DeleteResources(deleteParams);
+            List<Photo> photosDeleted = new List<Photo>();
+            foreach (var deletionResult in photoDeletionResults.Deleted)
+            {
+                if (deletionResult.Value == "deleted" || deletionResult.Value == "not_found")
+                {
+                    photosDeleted.Add(photosFromRepo.Find( photo => photo.PublicID == deletionResult.Key ));
                 }
             }
-            else
+
+            var deleteThumbnailParams = new DelResParams()
             {
-                repository.Delete(photoFromRepo);
-            }
+                PublicIds = photosDeleted.Select( photo => photo.ThumbnailPublicId ).ToList()
+            };
+            cloudinary.DeleteResources(deleteThumbnailParams);
+
+            repository.Delete(photosDeleted);
 
             if (await repository.SaveAll()) {
+                if (unauthorizedPhotoIds.Count > 0)
+                {
+                    return Unauthorized();
+                }
+                if (photosDeleted.Count != deletedPhotoIds.Count)
+                {
+                    return BadRequest("Unable to delete some of the photos");
+                }
                 return Ok();
             }
 
-            return BadRequest("Failed to delete the photo");
+            return BadRequest("Failed to delete photos");
         }
 
         [HttpPut("setAvatar")]
@@ -156,6 +202,8 @@ namespace DatingApp.API.Controllers
 
             photoForCreationDto.Url = uploadResult.Uri.ToString();
             photoForCreationDto.PublicId = uploadResult.PublicId;
+            photoForCreationDto.Width = uploadResult.Width;
+            photoForCreationDto.Height = uploadResult.Height;
             var photo = mapper.Map<Photo>(photoForCreationDto);
             photo.IsAvatar = true;
             if (existingAvatar != null)

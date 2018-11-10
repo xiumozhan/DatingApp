@@ -8,7 +8,6 @@ import { AuthService } from '../../services/auth.service';
 import { environment } from 'src/environments/environment';
 import { BsModalService } from 'ngx-bootstrap';
 import { ImageProfileUploadModalComponent } from 'src/app/modals/image-profile-upload-modal/image-profile-upload-modal.component';
-import { Photo } from 'src/app/models/photo';
 
 @Component({
     selector: 'app-member-edit',
@@ -47,10 +46,6 @@ export class MemberEditComponent implements OnInit {
         }, error => {
             this.alertify.error(error);
         });
-    }
-
-    updateMainPhoto(photoUrl) {
-        this.user.avatar.url = photoUrl;
     }
 
     openImageProfileUpdateModal(): void {

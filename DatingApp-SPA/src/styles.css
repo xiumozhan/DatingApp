@@ -10,6 +10,7 @@
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 4px;
+    height: 100%;
 }
 
 .nav-tabs > li.open,
@@ -62,6 +63,11 @@
     transform: translate(0, -50%) !important;
 }
 
+.modal-photo-upload {
+    top: 10%;
+    transform: none !important;
+}
+
 .link-button {
     background: none !important;
     border: none; 
@@ -72,4 +78,14 @@
 
 .gray-modal .modal-content {
     background-color: rgb(253, 251, 251);
+}
+
+.btn-img-upload {
+    border: 2px solid gray;
+    color: gray;
+    background-color: white;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: bold;
 }

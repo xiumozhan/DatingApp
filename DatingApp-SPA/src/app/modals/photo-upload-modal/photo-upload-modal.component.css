@@ -1,0 +1,19 @@
+.photo-upload-container {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+input[type="file"] {
+    font-size: 100px;
+    display: none;
+    cursor: pointer;
+}
+
+.image-upload-button-wrapper .btn-img-upload {
+    width: 100%;
+}
+
+.nv-file-over {
+    border: dotted 3px gray;
+    background-color: rgb(238, 229, 229, 0.5);
+}

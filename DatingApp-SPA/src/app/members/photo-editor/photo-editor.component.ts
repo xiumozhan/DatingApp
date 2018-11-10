@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { FileUploader } from 'ng2-file-upload';
 import { Photo } from '../../models/photo';
 import { environment } from '../../../environments/environment';
@@ -9,6 +9,7 @@ import { BsModalService } from 'ngx-bootstrap';
 import { Subject } from 'rxjs';
 import { ConfirmModalComponent } from '../../modals/confirm-modal/confirm-modal.component';
 import { NgxImageGalleryComponent, GALLERY_IMAGE, GALLERY_CONF } from 'ngx-image-gallery';
+import { PhotoUploadModalComponent } from 'src/app/modals/photo-upload-modal/photo-upload-modal.component';
 
 @Component({
     selector: 'app-photo-editor',
@@ -17,7 +18,8 @@ import { NgxImageGalleryComponent, GALLERY_IMAGE, GALLERY_CONF } from 'ngx-image
 })
 export class PhotoEditorComponent implements OnInit {
     @Input() photos: Photo[];
-    @Output() getMemberPhotoChange = new EventEmitter<string>();
+    @Input() enableEditMode: boolean;
+    isInEditMode = false;
     uploader: FileUploader;
     hasBaseDropZoneOver = false;
     baseUrl = environment.apiUrl;
@@ -35,7 +37,6 @@ export class PhotoEditorComponent implements OnInit {
         private alertify: AlertifyService, private modalService: BsModalService) { }
 
     ngOnInit() {
-        this.initializeUploader();
         this.photos.forEach( (photo: Photo, index: number, photoArray: Photo[]) => {
             photoArray[index].selected = false;
         } );
@@ -82,46 +83,7 @@ export class PhotoEditorComponent implements OnInit {
         this.hasBaseDropZoneOver = e;
     }
 
-    initializeUploader() {
-        this.uploader = new FileUploader({
-            url: `${this.baseUrl}users/${this.authService.decodedToken.nameid}/photos`,
-            authToken: 'Bearer ' + localStorage.getItem('token'),
-            isHTML5: true,
-            allowedFileType: ['image'],
-            removeAfterUpload: true,
-            autoUpload: false,
-            maxFileSize: 10 * 1024 * 1024
-        });
-
-        this.uploader.onAfterAddingFile = (file) => {
-            file.withCredentials = false;
-        };
-
-        this.uploader.onSuccessItem = (item, response, status, headers) => {
-            if (response) {
-                const res: Photo = JSON.parse(response);
-                const photo = {
-                    id: res.id,
-                    url: res.url,
-                    dateAdded: res.dateAdded,
-                    description: res.description,
-                    isAvatar: res.isAvatar,
-                    width: res.width,
-                    height: res.height,
-                    thumbnailUrl: res.thumbnailUrl,
-                    selected: false
-                };
-                this.photos.push(photo);
-                this.images.push({
-                    url: photo.url,
-                    title: photo.description,
-                    thumbnailUrl: photo.thumbnailUrl || photo.url
-                });
-            }
-        };
-    }
-
-    deletePhoto(ids: Set<number>) {
+    deletePhoto(ids: Set<number>): void {
         const deleteSelectedPhoto = new Subject<boolean>();
         const modal = this.modalService.show(ConfirmModalComponent, {
             initialState: {
@@ -147,7 +109,32 @@ export class PhotoEditorComponent implements OnInit {
         });
     }
 
-    openGallery(index: number = 0) {
+    openGallery(index: number = 0): void {
         this.ngxImageGallery.open(index);
+    }
+
+    enterEditMode(): void {
+        if ( this.enableEditMode ) {
+            this.isInEditMode = true;
+        }
+    }
+
+    exitEditMode(): void {
+        this.isInEditMode = false;
+        this.deselectAll();
+    }
+
+    openAddPhotosModal(): void {
+        const uploadedPhoto = new Subject<Photo>();
+        const modal = this.modalService.show(PhotoUploadModalComponent, { class: 'modal-lg modal-photo-upload' });
+        modal.content.successfullyUploadedPhoto = uploadedPhoto;
+        uploadedPhoto.asObservable().subscribe( photo => {
+            this.photos.push(photo);
+            this.images.push({
+                url: photo.url,
+                title: photo.description,
+                thumbnailUrl: photo.thumbnailUrl || photo.url
+            });
+        } );
     }
 }

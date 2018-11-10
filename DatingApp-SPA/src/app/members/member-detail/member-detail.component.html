@@ -46,7 +46,7 @@
                         <p>{{user.interests}}</p>
                     </tab>
                     <tab heading="Photos">
-                        <ngx-gallery [options]="galleryOptions" [images]="galleryImages"></ngx-gallery>
+                        <app-photo-editor [photos]="user.photos" [enableEditMode]="false"></app-photo-editor>
                     </tab>
                     <tab heading="Messages">
                         <p>Messages will go here</p>

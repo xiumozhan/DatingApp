@@ -2,7 +2,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BsDropdownModule, TabsModule, BsDatepickerModule, PaginationModule, ButtonsModule, ModalModule } from 'ngx-bootstrap';
+import { BsDropdownModule, TabsModule, BsDatepickerModule, PaginationModule, ButtonsModule, ModalModule,
+    TooltipModule } from 'ngx-bootstrap';
 import { RouterModule } from '@angular/router';
 import { JwtModule } from '@auth0/angular-jwt';
 import { NgxGalleryModule } from 'ngx-gallery';
@@ -38,6 +39,7 @@ import { SessionExpiredModalComponent } from './modals/session-expired-modal/ses
 import { SessionWatchService } from './services/session-watch.service';
 import { InactivityModalComponent } from './modals/inactivity-modal/inactivity-modal.component';
 import { ImageProfileUploadModalComponent } from './modals/image-profile-upload-modal/image-profile-upload-modal.component';
+import { PhotoUploadModalComponent } from './modals/photo-upload-modal/photo-upload-modal.component';
 
 export const tokenGetter = () => {
     return localStorage.getItem('token');
@@ -60,7 +62,8 @@ export const tokenGetter = () => {
         ConfirmModalComponent,
         SessionExpiredModalComponent,
         InactivityModalComponent,
-        ImageProfileUploadModalComponent
+        ImageProfileUploadModalComponent,
+        PhotoUploadModalComponent
     ],
     imports: [
         BrowserModule,
@@ -73,6 +76,7 @@ export const tokenGetter = () => {
         PaginationModule.forRoot(),
         TabsModule.forRoot(),
         ButtonsModule.forRoot(),
+        TooltipModule.forRoot(),
         RouterModule.forRoot(appRoutes, {
             onSameUrlNavigation: 'reload'
         }),
@@ -108,7 +112,8 @@ export const tokenGetter = () => {
         ConfirmModalComponent,
         SessionExpiredModalComponent,
         InactivityModalComponent,
-        ImageProfileUploadModalComponent
+        ImageProfileUploadModalComponent,
+        PhotoUploadModalComponent
     ]
 })
 export class AppModule { }

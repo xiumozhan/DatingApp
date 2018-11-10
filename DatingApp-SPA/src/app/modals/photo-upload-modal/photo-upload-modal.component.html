@@ -1,0 +1,68 @@
+<div class="photo-upload-container">
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <h3><b>Add Photos</b></h3>
+        </div>
+        <div class="col-md-9">
+            <button class="link-button float-right mr-3" (click)="close()">
+                <i class="fa fa-times fa-2x"></i>
+            </button>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div ng2FileDrop [ngClass]="{'nv-file-over': hasBaseDropZoneOver}" (fileOver)="fileOverBase($event)"
+                [uploader]="uploader" class="card bd-faded p-3 text-center mb-3 my-drop-zone">
+                <i class="fa fa-upload fa-3x"></i>
+                <b>Drop Photos Here</b>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="image-upload-button-wrapper">
+                <label for="image-multi-upload" class="btn-img-upload">Select Multiple Images</label>
+                <input id="image-multi-upload" type="file" ng2FileSelect [uploader]="uploader" multiple /><br />
+                <label for="image-single-upload" class="btn-img-upload">Select One Image</label>
+                <input id="image-single-upload" type="file" ng2FileSelect [uploader]="uploader" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12" style="margin-bottom: 40px" *ngIf="uploader?.queue?.length">
+            <h3><b>Upload queue</b></h3>
+            <p><b>Queue length: {{ uploader?.queue?.length }}</b></p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th width="50%">Name</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of uploader.queue">
+                        <td><strong>{{ item?.file?.name }}</strong></td>
+                        <td *ngIf="uploader.options.isHTML5" nowrap>{{ item?.file?.size/1024/1024 | number:'.2' }} MB</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div>
+                <div>
+                    <b>Queue progress:</b>
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" [ngStyle]="{ 'width': uploader.progress + '%' }"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-img-upload mr-3" (click)="uploader.uploadAll()" [disabled]="!uploader.getNotUploadedItems().length">
+                    <span class="fa fa-upload"></span> <b> Upload</b>
+                </button>
+                <button type="button" class="btn btn-img-upload mr-3" (click)="uploader.cancelAll()" [disabled]="!uploader.isUploading">
+                    <span class="fa fa-ban"></span> <b> Cancel</b>
+                </button>
+                <button type="button" class="btn btn-img-upload mr-3" (click)="uploader.clearQueue()" [disabled]="!uploader.queue.length">
+                    <span class="fa fa-trash"></span> <b> Remove</b>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

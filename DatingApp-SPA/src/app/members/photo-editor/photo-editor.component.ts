@@ -49,11 +49,13 @@ export class PhotoEditorComponent implements OnInit {
         });
     }
 
-    processImageSelection(e: any, photoId: number): void {
-        if (e.target.checked) {
-            this.selectedPhotoIds.add(photoId);
+    processImageSelection(photo: Photo, photoIndex: number): void {
+        if (photo.selected !== true) {
+            this.selectedPhotoIds.add(photo.id);
+            this.photos[photoIndex].selected = true;
         } else {
-            this.selectedPhotoIds.delete(photoId);
+            this.selectedPhotoIds.delete(photo.id);
+            this.photos[photoIndex].selected = false;
         }
     }
 

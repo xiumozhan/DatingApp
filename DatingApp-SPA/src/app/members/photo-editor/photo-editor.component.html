@@ -26,11 +26,12 @@
 
 <div class="row">
     <div class="col-sm-3 no-padding" *ngFor="let photo of photos; index as i">
-        <div class="thumbnail-img-wrapper">
-            <a (click)="openGallery(i)">
+        <div [ngClass]="{'thumbnail-img-wrapper-gallery': enableEditMode === false || isInEditMode === false,
+            'thumbnail-img-wrapper-editor': enableEditMode && isInEditMode && photo.selected === true}">
+            <a (click)="enableEditMode && isInEditMode ? processImageSelection(photo, i) : openGallery(i)">
                 <img src="{{photo.thumbnailUrl || photo.url}}" alt="" class="img-thumbnail p-1">
             </a>
-            <div class="round-icon-check-container" *ngIf="enableEditMode && isInEditMode">
+            <div class="round-icon-check-container" *ngIf="enableEditMode && isInEditMode && photo.selected === true">
                 <div class="round-icon-check">
                     <input type="checkbox" name="image-selector-{{i}}" id="image-selector-{{i}}" data-md-icheck
                         [(ngModel)]="photo.selected"

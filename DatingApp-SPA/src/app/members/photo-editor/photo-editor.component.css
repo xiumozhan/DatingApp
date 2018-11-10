@@ -4,16 +4,23 @@ img.img-thumbnail {
     cursor: pointer;
 }
 
-.thumbnail-img-wrapper img:hover {
+.thumbnail-img-wrapper-gallery img:hover {
     transform: scale(1.2, 1.2);
     transition-duration: 500ms;
     transition-timing-function: ease-out;
     opacity: 0.7;
 }
 
-.thumbnail-img-wrapper {
+.thumbnail-img-wrapper-gallery {
     overflow: hidden;
-    position: relative;
+}
+
+.thumbnail-img-wrapper-editor {
+    position: relative
+}
+
+.thumbnail-img-wrapper-editor img {
+    opacity: 0.7;
 }
 
 .no-padding {

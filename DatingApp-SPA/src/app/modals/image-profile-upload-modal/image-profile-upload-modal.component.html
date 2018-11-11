@@ -2,7 +2,7 @@
     <div class="upload-image-wrapper">
         <label for="image-upload" class="btn-img-upload">Upload An Image</label>
         <input id="image-upload" type="file" (change)="fileChangeEvent($event)" />
-        <button class="link-button pull-right" (click)="close()">
+        <button class="link-button pull-right" (click)="tearDown()">
             <i class="fa fa-close fa-3x"></i>
         </button>
         <button *ngIf="hasImageUploaded" class="link-button pull-right mr-3" (click)="uploadImage()">

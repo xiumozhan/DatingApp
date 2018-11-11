@@ -5,21 +5,26 @@ import { Photo } from 'src/app/models/photo';
 import { AuthService } from 'src/app/services/auth.service';
 import { BsModalRef } from 'ngx-bootstrap';
 import { Subject } from 'rxjs';
+import { BaseModalComponent } from '../base-modal-component';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-photo-upload-modal',
     templateUrl: './photo-upload-modal.component.html',
     styleUrls: ['./photo-upload-modal.component.css']
 })
-export class PhotoUploadModalComponent implements OnInit {
+export class PhotoUploadModalComponent extends BaseModalComponent implements OnInit {
     uploader: FileUploader;
     hasBaseDropZoneOver = false;
     baseUrl = environment.apiUrl;
     successfullyUploadedPhoto: Subject<Photo>;
 
-    constructor(private authService: AuthService, private modalRef: BsModalRef) { }
+    constructor(private authService: AuthService, protected modalRef: BsModalRef, protected router: Router) {
+        super(modalRef, router);
+    }
 
     ngOnInit() {
+        super.ngOnInit();
         this.initializeUploader();
     }
 
@@ -61,7 +66,7 @@ export class PhotoUploadModalComponent implements OnInit {
         this.hasBaseDropZoneOver = e;
     }
 
-    close(): void {
+    tearDown(): void {
         this.uploader.clearQueue();
         this.uploader.destroy();
         this.modalRef.hide();

@@ -7,13 +7,15 @@ import { AlertifyService } from 'src/app/services/alertify.service';
 import { UserService } from 'src/app/services/user.service';
 import { Photo } from 'src/app/models/photo';
 import { AuthService } from 'src/app/services/auth.service';
+import { BaseModalComponent } from '../base-modal-component';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-image-profile-upload-modal',
     templateUrl: './image-profile-upload-modal.component.html',
     styleUrls: ['./image-profile-upload-modal.component.css']
 })
-export class ImageProfileUploadModalComponent {
+export class ImageProfileUploadModalComponent extends BaseModalComponent {
     baseUrl = environment.apiUrl;
     imageChangedEvent: any;
     croppedImage: any;
@@ -23,8 +25,10 @@ export class ImageProfileUploadModalComponent {
     hasImageUploaded = false;
     private croppedImageBlob: Blob;
 
-    constructor(private modalRef: BsModalRef, private alertify: AlertifyService,
-        private userService: UserService, private authService: AuthService) { }
+    constructor(protected modalRef: BsModalRef, private alertify: AlertifyService,
+        private userService: UserService, private authService: AuthService, protected router: Router) {
+        super(modalRef, router);
+    }
 
     fileChangeEvent(event: any): void {
         if (event.target.value.length > 0) {
@@ -61,7 +65,7 @@ export class ImageProfileUploadModalComponent {
         });
     }
 
-    close() {
+    tearDown() {
         this.modalRef.hide();
         this.croppedImage = null;
         this.croppedImageBlob = null;

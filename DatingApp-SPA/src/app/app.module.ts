@@ -40,6 +40,7 @@ import { SessionWatchService } from './services/session-watch.service';
 import { InactivityModalComponent } from './modals/inactivity-modal/inactivity-modal.component';
 import { ImageProfileUploadModalComponent } from './modals/image-profile-upload-modal/image-profile-upload-modal.component';
 import { PhotoUploadModalComponent } from './modals/photo-upload-modal/photo-upload-modal.component';
+import { ListsResolver } from './resolvers/lists.resolver';
 
 export const tokenGetter = () => {
     return localStorage.getItem('token');
@@ -102,6 +103,7 @@ export const tokenGetter = () => {
         MemberDetailResolver,
         MemberListResolver,
         MemberEditResolver,
+        ListsResolver,
         PreventUnsavedChanges,
         SessionWatchService
     ],

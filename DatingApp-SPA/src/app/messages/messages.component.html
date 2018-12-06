@@ -1,3 +1,65 @@
-<p>
-  messages works!
-</p>
+<div class="container">
+    <div class="message-container">
+        <div class="conversation-container">
+            <ul>
+                <li *ngFor="let messageThread of messageThreads | keyvalue" class="conversation-listitem">
+                    <a class="conversation-link" 
+                        [ngClass]="{active: isSelected(messageThread.value.user)}" 
+                        (click)="selectUserForConversation(messageThread.value.user)">
+                        <div class="conversation-avatar-card">
+                            <img src="{{messageThread.value.user.avatar !== null ? 
+                                messageThread.value.user.avatar.url : '../../../assets/user.png'}}" alt="">
+                        </div>
+                        <div class="conversation-name-card">
+                            <div class="conversation-name-message-container">
+                                <div class="latest-conversation-row">
+                                    <p class="conversation-name-title">{{messageThread.value.user.knownAs}}</p>
+                                    <div *ngIf="hadConversationBefore(messageThread.value)" class="latest-conversation-status">
+                                        <p class="conversation-last-time">{{messageThread.value.latestMessage.messageSent | date: 'shortTime'}}</p>
+                                    </div>
+                                </div>
+                                <div class="latest-conversation-row">
+                                    <p class="latest-conversation-preview">{{messageThread.value.latestMessage?.messageContent}}</p>
+                                    <div *ngIf="hasUnreadMessage(messageThread.value)" class="latest-conversation-status">
+                                        <p class="unread-count">{{messageThread.value.unreadMessageCount}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="message-thread-container">
+            <div #messageList class="message-list-container" (scroll)="onScroll()">
+                <ul class="message-list">
+                    <li #messageItem class="message-row" *ngFor="let message of messages; index as i">
+                        <time *ngIf="isFirstMessageOfTheDay(i)" class="message-time-title">
+                            {{isDateWithinCurrentYear(message.messageSent)? 
+                                (message.messageSent | date: 'EEEE, MMMM d') : 
+                                (message.messageSent | date: 'fullDate')}}
+                        </time>
+                        <div class="sender-message-card">
+                            <div class="sender-avatar-card">
+                                <img 
+                                    src="{{(isSenderCurrentUser(message.senderId)? currentUserAvatar : selectedUserAvatar) || 
+                                        '../../../assets/user.png'}}" alt="">
+                            </div>
+                            <div class="clearfix">
+                                <p class="sender-title">
+                                    <b>{{isSenderCurrentUser(message.senderId)? currentUser.knownAs: selectedUser.knownAs}}</b>
+                                </p>
+                                <p class="send-time">{{message.messageSent | date: 'shortTime'}}</p>
+                            </div>
+                            <p class="send-content">{{message.messageContent}}</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="message-send-container">
+                <textarea type="text" class="message-typing-panel" [(ngModel)]="pendingMessageContent" (keyup.enter)="sendMessage()"></textarea>
+                <button class="btn btn-success btn-message-send" (click)="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>

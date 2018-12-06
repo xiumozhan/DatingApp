@@ -3,6 +3,7 @@ import { AuthService } from './services/auth.service';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { User } from './models/user';
 import { SessionWatchService } from './services/session-watch.service';
+import { ChatMessageService } from './services/chat-message.service';
 
 @Component({
     selector: 'app-root',
@@ -12,7 +13,8 @@ import { SessionWatchService } from './services/session-watch.service';
 export class AppComponent implements OnInit, OnDestroy {
     jwtHelper = new JwtHelperService();
 
-    constructor(private authService: AuthService, private sessionWatchService: SessionWatchService) {}
+    constructor(private authService: AuthService, private sessionWatchService: SessionWatchService,
+        private chatMessageService: ChatMessageService) {}
 
     ngOnInit() {
         const token = localStorage.getItem('token');
@@ -24,6 +26,7 @@ export class AppComponent implements OnInit, OnDestroy {
                 if (user) {
                     this.authService.currentUser = user;
                     this.authService.changeMemberAvatar(user.avatar !== null ? user.avatar.url : null);
+                    this.chatMessageService.setupConnectionToMessageHub();
                 }
             } else {
                 this.authService.removeStoredAuthData();
@@ -33,5 +36,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.sessionWatchService.stopWatching();
+        this.chatMessageService.disconnectFromMessageHub();
     }
 }

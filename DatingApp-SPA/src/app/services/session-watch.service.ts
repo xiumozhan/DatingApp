@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { SessionStatus } from '../models/session-status.enum';
 import { InactivityModalComponent } from '../modals/inactivity-modal/inactivity-modal.component';
 import { Idle, DEFAULT_INTERRUPTSOURCES, AutoResume } from '@ng-idle/core';
+import { ChatMessageService } from './chat-message.service';
 
 @Injectable({
     providedIn: 'root'
@@ -26,7 +27,7 @@ export class SessionWatchService {
     private onTimeout: Subscription;
 
     constructor(private authService: AuthService, private modalService: BsModalService, private router: Router,
-        private idle: Idle) { }
+        private idle: Idle, private chatMessageService: ChatMessageService) { }
 
     startWatching(): void {
         if (!this.isWatching) {
@@ -116,6 +117,7 @@ export class SessionWatchService {
         } else {
             this.stopWatching();
             this.authService.removeStoredAuthData();
+            this.chatMessageService.disconnectFromMessageHub();
             this.router.navigate(['/home']);
         }
     }
@@ -132,6 +134,7 @@ export class SessionWatchService {
         userClosedModal.asObservable().subscribe(modalClosed => {
             if (modalClosed) {
                 this.authService.removeStoredAuthData();
+                this.chatMessageService.disconnectFromMessageHub();
                 this.router.navigate(['/home']);
             }
         });
@@ -141,6 +144,7 @@ export class SessionWatchService {
         this.modal.hide();
         this.stopWatching();
         this.authService.removeStoredAuthData();
+        this.chatMessageService.disconnectFromMessageHub();
         this.router.navigate(['/home']);
     }
 

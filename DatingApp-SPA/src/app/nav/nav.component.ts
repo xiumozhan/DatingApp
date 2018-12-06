@@ -3,6 +3,7 @@ import { AuthService } from '../services/auth.service';
 import { AlertifyService } from '../services/alertify.service';
 import { Router } from '@angular/router';
 import { SessionWatchService } from '../services/session-watch.service';
+import { ChatMessageService } from '../services/chat-message.service';
 
 @Component({
     selector: 'app-nav',
@@ -14,7 +15,7 @@ export class NavComponent implements OnInit {
     avatarUrl: string;
 
     constructor(public authService: AuthService, private alertify: AlertifyService,
-        private router: Router, private sessionWatchService: SessionWatchService) { }
+        private router: Router, private sessionWatchService: SessionWatchService, private chatMessageService: ChatMessageService) { }
 
     ngOnInit() {
         this.authService.currentAvatarUrl.subscribe(photoUrl => {
@@ -30,6 +31,7 @@ export class NavComponent implements OnInit {
         }, () => {
             this.sessionWatchService.startWatching();
             this.router.navigate(['/members']);
+            this.chatMessageService.setupConnectionToMessageHub();
         });
     }
 
@@ -42,6 +44,7 @@ export class NavComponent implements OnInit {
         this.authService.removeStoredAuthData();
         this.alertify.message('logged out');
         this.router.navigate(['/home']);
+        this.chatMessageService.disconnectFromMessageHub();
     }
 
 }

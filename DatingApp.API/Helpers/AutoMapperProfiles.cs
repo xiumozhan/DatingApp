@@ -31,6 +31,28 @@ namespace DatingApp.API.Helpers
             CreateMap<Photo, PhotoForReturnDto>();
             CreateMap<PhotoForCreationDto, Photo>();
             CreateMap<UserForRegisterDto, User>();
+            CreateMap<MessageThread, MessageThreadForReturnDto>()
+                .ForMember(dest => dest.Participant, opt => {
+                    opt.ResolveUsing((src, dest, arg3, context) => {
+                        if ((int)context.Options.Items["UserRequestingIt"] == src.ParticipantOne)
+                        {
+                            return src.ParticipantTwo;
+                        }
+                        return src.ParticipantOne;
+                    });
+                })
+                .ForMember(dest => dest.UnreadMessageCount, opt => {
+                    opt.ResolveUsing((src, dest, arg3, context) => {
+                        if ((int)context.Options.Items["UserRequestingIt"] == src.ParticipantOne)
+                        {
+                            return src.ParticipantOneUnreadMessageCount;
+                        }
+                        return src.ParticipantTwoUnreadMessageCount;
+                    });
+                })
+                .ForMember(dest => dest.LatestMessage, opt => {
+                    opt.MapFrom(src => src.Messages.ElementAtOrDefault(src.Messages.Capacity - 1));
+                });
         }
     }
 }

@@ -5,6 +5,7 @@ import { FormGroup, FormControl, Validators, FormBuilder } from '@angular/forms'
 import { BsDatepickerConfig } from 'ngx-bootstrap';
 import { User } from '../models/user';
 import { Router } from '@angular/router';
+import { ChatMessageService } from '../services/chat-message.service';
 
 @Component({
     selector: 'app-register',
@@ -18,7 +19,7 @@ export class RegisterComponent implements OnInit {
     bsConfig: Partial<BsDatepickerConfig>;
 
     constructor(private authService: AuthService, private alertify: AlertifyService,
-        private fb: FormBuilder, private router: Router) { }
+        private fb: FormBuilder, private router: Router, private chatMessageService: ChatMessageService) { }
 
     ngOnInit() {
         this.bsConfig = {
@@ -56,6 +57,7 @@ export class RegisterComponent implements OnInit {
             }, () => {
                 this.authService.login(this.user).subscribe(() => {
                     this.router.navigate(['/members']);
+                    this.chatMessageService.setupConnectionToMessageHub();
                 });
             });
         }

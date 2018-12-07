@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using DatingApp.API.Data;
@@ -18,6 +19,8 @@ namespace DatingApp.API.Hubs
     public class DatingPrivateChatHub : Hub
     {
         private static ConcurrentDictionary<int, int> userConnectionAmount = new ConcurrentDictionary<int, int>();
+        private static ConcurrentDictionary<int, List<int>> userFocusingMessageThreads = new ConcurrentDictionary<int, List<int>>();
+        private static readonly object userFocusListLock = new object();
         private readonly string onlineStatusListenerGroupName = "OnlineStatusListeners";
         private readonly IChatRepository repository;
 
@@ -45,12 +48,48 @@ namespace DatingApp.API.Hubs
             await repository.MarkThreadAsRead(ObjectId.Parse(threadId), userId, anotherParticipantId);
         }
 
+        [HubMethodName("FocusOnThread")]
+        public void FocusOnThread(int anotherParticipantId)
+        {
+            int userId = int.Parse(Context.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            userFocusingMessageThreads.AddOrUpdate(
+                userId,
+                new List<int>(anotherParticipantId),
+                (key, usersList) => {
+                    lock (userFocusListLock)
+                    {
+                        usersList.Add(userId);
+                        return usersList;
+                    }
+                });
+        }
+
+        [HubMethodName("LoseFocusOnThread")]
+        public void LoseFocusOnThread(int anotherParticipantId)
+        {
+            int userId = int.Parse(Context.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var newUsersList = new List<int>();
+            if (userFocusingMessageThreads.TryGetValue(userId, out newUsersList))
+            {
+                lock (userFocusListLock)
+                {
+                    newUsersList.Remove(anotherParticipantId);
+                }
+            }
+        }
+
         [HubMethodName("SendPrivateMessage")]
         public async Task SendChatMessage(string threadId, int recipientId, string message)
         {
             int senderId = int.Parse(Context.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var isRecipientFocusingOnThisConversation = false;
+            var recipientFocusingConversationList = new List<int>();
+            if (userFocusingMessageThreads.TryGetValue(recipientId, out recipientFocusingConversationList))
+            {
+                isRecipientFocusingOnThisConversation = recipientFocusingConversationList.Contains(senderId);
+            }
             var messageToSent = new Message(senderId, recipientId, message);
-            await repository.AddMessageToThread(messageToSent, ObjectId.Parse(threadId));
+            await repository.AddMessageToThread(messageToSent, ObjectId.Parse(threadId), isRecipientFocusingOnThisConversation);
             await Task.WhenAll(new [] {
                 Clients.Group(recipientId.ToString()).SendAsync("ReceiveMessage", messageToSent ),
                 Clients.Group(senderId.ToString()).SendAsync("ReceiveMessage", messageToSent )

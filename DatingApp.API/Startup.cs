@@ -42,7 +42,7 @@ namespace DatingApp.API
                 .ConfigureWarnings( warnings => warnings.Ignore(CoreEventId.IncludeIgnoredWarning) ) );
             services.Configure<MongoDbSettings>(options => {
                 options.ConnectionString = Configuration.GetSection("MongoDbSettings:ConnectionString").Value;
-                options.DatabaseName = Configuration.GetSection("MongoDbSettings:DatabaseConnection").Value;
+                options.DatabaseName = Configuration.GetSection("MongoDbSettings:DatabaseName").Value;
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions( opt => {

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DatingApp.API.Helpers;
 using DatingApp.API.Models;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -10,31 +12,36 @@ namespace DatingApp.API.Data
     {
         private readonly ChatMessageContext context;
 
-        public ChatRepository(ChatMessageContext context)
+        public ChatRepository(IOptions<MongoDbSettings> options)
         {
-            this.context = context;
+            this.context = new ChatMessageContext(options);
         }
 
-        public async Task AddMessageToThread(Message message, ObjectId threadId)
+        public async Task AddMessageToThread(Message message, ObjectId threadId, bool isRecipientFocusingOnThisConversation)
         {
+            var updateDefinition = new UpdateDefinitionBuilder<MessageThread>()
+                .Push(thread => thread.Messages, message)
+                .Set(thread => thread.VisibleToParticipantOne, true)
+                .Set(thread => thread.VisibleToParticipantTwo, true);
+            if (!isRecipientFocusingOnThisConversation)
+            {
+                if (message.SenderId > message.RecipientId)
+                {
+                    updateDefinition.Inc(thread => thread.ParticipantOneUnreadMessageCount, 1);
+                }
+                else
+                {
+                    updateDefinition.Inc(thread => thread.ParticipantTwoUnreadMessageCount, 1);
+                }
+            }
             await context.MessageThreads.UpdateOneAsync(
                 thread => thread.Id.Equals(threadId),
-                new UpdateDefinitionBuilder<MessageThread>()
-                    .Push(thread => thread.Messages, message)
-                    .Set(thread => thread.VisibleToParticipantOne, true)
-                    .Set(thread => thread.VisibleToParticipantTwo, true));
+                updateDefinition);
         }
 
-        public async Task CreateNewMessageThread(int participantOneId, int participantTwoId,
-            bool isCurrentUserParticipantOne)
+        public async Task CreateNewMessageThread(MessageThread messageThread)
         {
-            await context.MessageThreads.InsertOneAsync(new MessageThread()
-            {
-                ParticipantOne = participantOneId,
-                ParticipantTwo = participantTwoId,
-                VisibleToParticipantOne = isCurrentUserParticipantOne,
-                VisibleToParticipantTwo = !isCurrentUserParticipantOne
-            });
+            await context.MessageThreads.InsertOneAsync(messageThread);
         }
 
         public async Task<MessageThread> GetMessageThread(ObjectId threadId)
@@ -47,7 +54,8 @@ namespace DatingApp.API.Data
         public async Task<List<MessageThread>> GetMessageThreadsOfUser(int userId)
         {
             return await context.MessageThreads
-                .FindSync(thread => isThreadVisibleToUser(thread, userId))
+                .FindSync(thread => (thread.ParticipantOne == userId && thread.VisibleToParticipantOne) ||
+                    (thread.ParticipantTwo == userId && thread.VisibleToParticipantTwo))
                 .ToListAsync();
         }
 
@@ -71,12 +79,6 @@ namespace DatingApp.API.Data
                 {
                     IsUpsert = true
                 });
-        }
-
-        private bool isThreadVisibleToUser(MessageThread thread, int userId)
-        {
-            return (thread.ParticipantOne == userId && thread.VisibleToParticipantOne) ||
-                (thread.ParticipantTwo == userId && thread.VisibleToParticipantTwo);
         }
     }
 }

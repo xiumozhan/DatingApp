@@ -141,5 +141,14 @@ namespace DatingApp.API.Data
         {
             return await context.SaveChangesAsync() > 0;
         }
+
+        public async Task<List<User>> GetUsers(List<int> ids)
+        {
+            var users = await context.Users
+                .Include( p => p.Photos )
+                .Where( user => ids.Contains(user.Id) )
+                .ToListAsync();
+            return users;
+        }
     }
 }

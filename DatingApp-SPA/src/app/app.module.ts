@@ -42,6 +42,8 @@ import { ImageProfileUploadModalComponent } from './modals/image-profile-upload-
 import { PhotoUploadModalComponent } from './modals/photo-upload-modal/photo-upload-modal.component';
 import { ListsResolver } from './resolvers/lists.resolver';
 import { ChatMessageService } from './services/chat-message.service';
+import { ChatMessageThreadService } from './services/chat-message-thread.service';
+import { MessageThreadResolver } from './resolvers/message-thread.resolver';
 
 export const tokenGetter = () => {
     return localStorage.getItem('token');
@@ -105,9 +107,11 @@ export const tokenGetter = () => {
         MemberListResolver,
         MemberEditResolver,
         ListsResolver,
+        MessageThreadResolver,
         PreventUnsavedChanges,
         SessionWatchService,
-        ChatMessageService
+        ChatMessageService,
+        ChatMessageThreadService
     ],
     bootstrap: [
         AppComponent

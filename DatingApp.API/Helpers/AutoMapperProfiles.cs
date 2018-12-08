@@ -33,22 +33,10 @@ namespace DatingApp.API.Helpers
             CreateMap<UserForRegisterDto, User>();
             CreateMap<MessageThread, MessageThreadForReturnDto>()
                 .ForMember(dest => dest.Participant, opt => {
-                    opt.ResolveUsing((src, dest, arg3, context) => {
-                        if ((int)context.Options.Items["UserRequestingIt"] == src.ParticipantOne)
-                        {
-                            return src.ParticipantTwo;
-                        }
-                        return src.ParticipantOne;
-                    });
+                    opt.ResolveUsing((src, dest, arg3, context) => (UserForListDto)context.Options.Items["AnotherParticipant"]);
                 })
                 .ForMember(dest => dest.UnreadMessageCount, opt => {
-                    opt.ResolveUsing((src, dest, arg3, context) => {
-                        if ((int)context.Options.Items["UserRequestingIt"] == src.ParticipantOne)
-                        {
-                            return src.ParticipantOneUnreadMessageCount;
-                        }
-                        return src.ParticipantTwoUnreadMessageCount;
-                    });
+                    opt.ResolveUsing((src, dest, arg3, context) => (int)context.Options.Items["UnreadMessageCount"]);
                 })
                 .ForMember(dest => dest.LatestMessage, opt => {
                     opt.MapFrom(src => src.Messages.ElementAtOrDefault(src.Messages.Capacity - 1));

@@ -5,6 +5,8 @@ import { ChatMessageService } from '../services/chat-message.service';
 import { ChatMessage } from '../models/chat-message';
 import { AuthService } from '../services/auth.service';
 import { MessageThread } from '../models/message-thread';
+import { ChatMessageThreadService } from '../services/chat-message-thread.service';
+import { ChatMessageToDisplay } from '../models/chat-message-to-display';
 
 @Component({
     selector: 'app-messages',
@@ -12,24 +14,24 @@ import { MessageThread } from '../models/message-thread';
     styleUrls: ['./messages.component.css']
 })
 export class MessagesComponent implements OnInit, AfterViewInit {
-    messageThreads: Map<number, MessageThread> = new Map<number, MessageThread>();
-    selectedUser: User;
+    messageThreads: Map<string, MessageThread> = new Map<string, MessageThread>();
+    selectedThread: MessageThread;
     selectedUserAvatar: string;
     currentUser: User;
     currentUserAvatar: string;
     pendingMessageContent: string;
-    messages: ChatMessage[];
+    messages: ChatMessageToDisplay[];
     disableScrollBottom = false;
     @ViewChild('messageList', { read: ElementRef }) messageList: ElementRef;
     @ViewChildren('messageItem', { read: ElementRef }) messageItems: QueryList<ElementRef>;
 
     constructor(private route: ActivatedRoute, private messageService: ChatMessageService,
-        private authService: AuthService) { }
+        private authService: AuthService, private messageThreadService: ChatMessageThreadService) { }
 
     ngOnInit() {
         this.route.data.subscribe(data => {
-            data['users'].result.forEach((user: User) => {
-                this.messageThreads.set(user.id, { user: user, unreadMessageCount: 0 });
+            data['messageThreads'].forEach((messageThread: MessageThread) => {
+                this.messageThreads.set(messageThread.id, messageThread);
             });
         });
         this.currentUser = this.authService.currentUser;
@@ -42,22 +44,12 @@ export class MessagesComponent implements OnInit, AfterViewInit {
     }
 
     private processIncomingNewMessage(message: ChatMessage) {
-        let messageThread: MessageThread;
-        let messageThreadKey: number;
-        if (this.selectedUser.id === message.senderId) {
-            messageThread = this.messageThreads.get(message.senderId);
-            messageThreadKey = message.senderId;
+        const messageThreadKey: string = message.threadId;
+        const messageThread: MessageThread = this.messageThreads.get(messageThreadKey);
+        if (this.selectedThread.id === message.threadId) {
             this.messages.push(message);
         } else {
-            if (this.isSenderCurrentUser(message.senderId)) {
-                messageThread = this.messageThreads.get(message.recipientId);
-                messageThreadKey = message.recipientId;
-                this.messages.push(message);
-            } else {
-                messageThread = this.messageThreads.get(message.senderId);
-                messageThreadKey = message.senderId;
-                messageThread.unreadMessageCount += 1;
-            }
+            messageThread.unreadMessageCount += 1;
         }
         messageThread.latestMessage = message;
         this.messageThreads.set(messageThreadKey, messageThread);
@@ -87,32 +79,46 @@ export class MessagesComponent implements OnInit, AfterViewInit {
         }
     }
 
-    isSelected(user: User): boolean {
-        if (this.selectedUser === undefined) {
+    isSelected(thread: MessageThread): boolean {
+        if (this.selectedThread === undefined) {
             return false;
         }
-        return user.id === this.selectedUser.id;
+        return thread.id === this.selectedThread.id;
     }
 
     isSenderCurrentUser(userId: number): boolean {
         return userId === this.currentUser.id;
     }
 
-    selectUserForConversation(user: User): void {
-        if (this.selectedUser === undefined || user.id !== this.selectedUser.id) {
-            this.selectedUser = user;
-            if (this.selectedUser.avatar !== null) {
-                this.selectedUserAvatar = this.selectedUser.avatar.url;
+    selectUserForConversation(thread: MessageThread): void {
+        if (this.selectedThread === undefined || thread.id !== this.selectedThread.id) {
+            this.selectedThread = thread;
+            if (this.selectedThread.participant.avatar !== null) {
+                this.selectedUserAvatar = this.selectedThread.participant.avatar.url;
             } else {
                 this.selectedUserAvatar = null;
             }
             this.pendingMessageContent = '';
-            this.messages = [];
+            this.loadMessages(thread.id);
+            this.markMessageThreadAsRead(thread.id);
         }
     }
 
+    private loadMessages(threadId: string): void {
+        this.messageThreadService.getAllMessagesForThread(threadId).subscribe((messages: ChatMessageToDisplay[]) => {
+            this.messages = messages;
+        });
+    }
+
+    private markMessageThreadAsRead(threadId: string) {
+        const threadSelected: MessageThread = this.messageThreads.get(threadId);
+        threadSelected.unreadMessageCount = 0;
+        this.messageThreads.set(threadId, threadSelected);
+    }
+
     sendMessage(): void {
-        this.messageService.sendPrivateMessageToUser(this.selectedUser.id, this.pendingMessageContent);
+        this.messageService.sendPrivateMessageToUser(
+            this.selectedThread.id, this.selectedThread.participant.id, this.pendingMessageContent);
         this.pendingMessageContent = '';
     }
 
@@ -138,8 +144,7 @@ export class MessagesComponent implements OnInit, AfterViewInit {
     }
 
     hadConversationBefore(thread: MessageThread): boolean {
-        console.log(thread.latestMessage);
-        return thread.latestMessage !== undefined;
+        return thread.latestMessage !== null;
     }
 
 }

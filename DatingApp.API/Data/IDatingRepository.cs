@@ -12,6 +12,7 @@ namespace DatingApp.API.Data
         void Delete<T>(List<T> entities) where T: class;
         Task<bool> SaveAll();
         Task<PagedList<User>> GetUsers(UserParams userParams);
+        Task<List<User>> GetUsers(List<int> ids);
         Task<User> GetUser(int id);
         Task<Photo> GetPhoto(int id);
         Task<List<Photo>> GetPhotos(List<int> ids);

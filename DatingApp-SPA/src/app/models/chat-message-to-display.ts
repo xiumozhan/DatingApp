@@ -1,5 +1,4 @@
-export interface ChatMessage {
-    threadId: string;
+export interface ChatMessageToDisplay {
     senderId: number;
     recipientId: number;
     messageContent: string;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -18,12 +19,14 @@ namespace DatingApp.API.Controllers
     [ApiController]
     public class ChatController : ControllerBase
     {
-        private readonly IChatRepository repository;
+        private readonly IChatRepository chatRepository;
+        private readonly IDatingRepository datingRepository;
         private readonly IMapper mapper;
 
-        public ChatController(IChatRepository repository, IMapper mapper)
+        public ChatController(IChatRepository chatRepository, IDatingRepository datingRepository, IMapper mapper)
         {
-            this.repository = repository;
+            this.chatRepository = chatRepository;
+            this.datingRepository = datingRepository;
             this.mapper = mapper;
         }
 
@@ -34,14 +37,22 @@ namespace DatingApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var messageThread = await repository.GetMessageThread(ObjectId.Parse(threadId));
+            var messageThread = await chatRepository.GetMessageThread(ObjectId.Parse(threadId));
             if ( userId != messageThread.ParticipantOne && userId != messageThread.ParticipantTwo )
             {
                 return Unauthorized();
             }
+            var anotherParticipantId = userId == messageThread.ParticipantOne? 
+                messageThread.ParticipantTwo: messageThread.ParticipantOne;
+            var anotherParticipant = mapper.Map<UserForListDto>(await datingRepository.GetUser(anotherParticipantId));
+            var unreadMessageCount = userId == messageThread.ParticipantOne? 
+                messageThread.ParticipantTwoUnreadMessageCount: messageThread.ParticipantOneUnreadMessageCount;
             var messageThreadToReturn = mapper.Map<MessageThreadForReturnDto>(
                 messageThread,
-                option => option.Items["UserRequestingIt"] = userId);
+                option => {
+                    option.Items["AnotherParticipant"] = anotherParticipant;
+                    option.Items["UnreadMessageCount"] = unreadMessageCount;
+                });
             return Ok(messageThreadToReturn);
         }
 
@@ -52,7 +63,7 @@ namespace DatingApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var messageThread = await repository.GetMessageThread(ObjectId.Parse(threadId));
+            var messageThread = await chatRepository.GetMessageThread(ObjectId.Parse(threadId));
             if ( userId != messageThread.ParticipantOne && userId != messageThread.ParticipantTwo )
             {
                 return Unauthorized();
@@ -67,10 +78,42 @@ namespace DatingApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var messageThreads = await repository.GetMessageThreadsOfUser(userId);
-            var messageThreadsToReturn = mapper.Map<List<MessageThreadForReturnDto>>(
-                messageThreads,
-                option => option.Items["UserRequestingIt"] = userId);
+            var messageThreads = await chatRepository.GetMessageThreadsOfUser(userId);
+            var otherParticipantIds = new Dictionary<string, int>();
+            messageThreads.ForEach(thread => {
+                if (userId == thread.ParticipantOne)
+                {
+                    otherParticipantIds.TryAdd(thread.Id.ToString(), thread.ParticipantTwo);
+                }
+                else
+                {
+                    otherParticipantIds.TryAdd(thread.Id.ToString(), thread.ParticipantOne);
+                }
+            });
+            var unreadMessageCounts = new Dictionary<string, int>();
+            messageThreads.ForEach(thread => {
+                if (userId == thread.ParticipantOne)
+                {
+                    unreadMessageCounts.TryAdd(thread.Id.ToString(), thread.ParticipantOneUnreadMessageCount);
+                }
+                else
+                {
+                    unreadMessageCounts.TryAdd(thread.Id.ToString(), thread.ParticipantTwoUnreadMessageCount);
+                }
+            });
+            var otherParticipantsList = mapper.Map<List<UserForListDto>>(await datingRepository.GetUsers(otherParticipantIds.Values.ToList()));
+            var otherParticipants = new Dictionary<int, UserForListDto>();
+            otherParticipantsList.ForEach(participant => {
+                otherParticipants.Add(participant.Id, participant);
+            });
+            var messageThreadsToReturn = messageThreads.Select((thread, index) => 
+                mapper.Map<MessageThreadForReturnDto>(
+                    thread,
+                    option => {
+                        option.Items["AnotherParticipant"] = otherParticipants.GetValueOrDefault(otherParticipantIds.GetValueOrDefault(thread.Id.ToString()));
+                        option.Items["UnreadMessageCount"] = unreadMessageCounts.GetValueOrDefault(thread.Id.ToString());
+                    }
+                )).ToList();
             return Ok(messageThreadsToReturn);
         }
 
@@ -83,9 +126,15 @@ namespace DatingApp.API.Controllers
                 return Unauthorized();
             }
             var anotherParticipantId = createMessageThreadParams.anotherParticipantId;
+            var anotherParticipantTask = datingRepository.GetUser(anotherParticipantId);
             if (userId == anotherParticipantId)
             {
                 return BadRequest("Cannot create message thread with yourself.");
+            }
+            var anotherParticipant = await anotherParticipantTask;
+            if (anotherParticipant == null)
+            {
+                return BadRequest("Unable to start conversation with user doesn't exist.");
             }
             var isUserParticipantOne = userId < anotherParticipantId;
             var participantOneId = isUserParticipantOne? userId : anotherParticipantId;
@@ -97,10 +146,13 @@ namespace DatingApp.API.Controllers
                 VisibleToParticipantOne = isUserParticipantOne,
                 VisibleToParticipantTwo = !isUserParticipantOne
             };
-            await repository.CreateNewMessageThread(newMessageThread);
+            await chatRepository.CreateNewMessageThread(newMessageThread);
             var messageThreadToReturn = mapper.Map<MessageThreadForReturnDto>(
                 newMessageThread,
-                option => option.Items["UserRequestingIt"] = userId);
+                option => {
+                    option.Items["AnotherParticipant"] = mapper.Map<UserForListDto>(anotherParticipant);
+                    option.Items["UnreadMessageCount"] = 0;
+                });
             return CreatedAtRoute(
                 "GetMessageThread",
                 new { threadId = newMessageThread.Id.ToString() },

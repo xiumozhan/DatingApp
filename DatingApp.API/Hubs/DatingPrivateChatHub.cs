@@ -88,8 +88,15 @@ namespace DatingApp.API.Hubs
             {
                 isRecipientFocusingOnThisConversation = recipientFocusingConversationList.Contains(senderId);
             }
-            var messageToSent = new Message(senderId, recipientId, message);
-            await repository.AddMessageToThread(messageToSent, ObjectId.Parse(threadId), isRecipientFocusingOnThisConversation);
+            var messageToSave = new Message(senderId, recipientId, message);
+            var messageToSent = new MessageForReceive() {
+                ThreadId = threadId,
+                SenderId = senderId,
+                RecipientId = recipientId,
+                MessageContent = message,
+                MessageSent = messageToSave.MessageSent
+            };
+            await repository.AddMessageToThread(messageToSave, ObjectId.Parse(threadId), isRecipientFocusingOnThisConversation);
             await Task.WhenAll(new [] {
                 Clients.Group(recipientId.ToString()).SendAsync("ReceiveMessage", messageToSent ),
                 Clients.Group(senderId.ToString()).SendAsync("ReceiveMessage", messageToSent )

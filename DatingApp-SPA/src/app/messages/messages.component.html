@@ -4,16 +4,16 @@
             <ul>
                 <li *ngFor="let messageThread of messageThreads | keyvalue" class="conversation-listitem">
                     <a class="conversation-link" 
-                        [ngClass]="{active: isSelected(messageThread.value.user)}" 
-                        (click)="selectUserForConversation(messageThread.value.user)">
+                        [ngClass]="{active: isSelected(messageThread.value)}" 
+                        (click)="selectUserForConversation(messageThread.value)">
                         <div class="conversation-avatar-card">
-                            <img src="{{messageThread.value.user.avatar !== null ? 
-                                messageThread.value.user.avatar.url : '../../../assets/user.png'}}" alt="">
+                            <img src="{{messageThread.value.participant.avatar !== null ? 
+                                messageThread.value.participant.avatar.url : '../../../assets/user.png'}}" alt="">
                         </div>
                         <div class="conversation-name-card">
                             <div class="conversation-name-message-container">
                                 <div class="latest-conversation-row">
-                                    <p class="conversation-name-title">{{messageThread.value.user.knownAs}}</p>
+                                    <p class="conversation-name-title">{{messageThread.value.participant.knownAs}}</p>
                                     <div *ngIf="hadConversationBefore(messageThread.value)" class="latest-conversation-status">
                                         <p class="conversation-last-time">{{messageThread.value.latestMessage.messageSent | date: 'shortTime'}}</p>
                                     </div>
@@ -47,7 +47,7 @@
                             </div>
                             <div class="clearfix">
                                 <p class="sender-title">
-                                    <b>{{isSenderCurrentUser(message.senderId)? currentUser.knownAs: selectedUser.knownAs}}</b>
+                                    <b>{{isSenderCurrentUser(message.senderId)? currentUser.knownAs: selectedThread.participant.knownAs}}</b>
                                 </p>
                                 <p class="send-time">{{message.messageSent | date: 'shortTime'}}</p>
                             </div>

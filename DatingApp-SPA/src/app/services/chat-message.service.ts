@@ -36,8 +36,8 @@ export class ChatMessageService {
         this.hubConnection.stop();
     }
 
-    public sendPrivateMessageToUser(recipientId: number, messageContent: string): void {
-        this.hubConnection.invoke('SendPrivateMessage', recipientId, messageContent);
+    public sendPrivateMessageToUser(threadId: string, recipientId: number, messageContent: string): void {
+        this.hubConnection.invoke('SendPrivateMessage', threadId, recipientId, messageContent);
     }
 
 }

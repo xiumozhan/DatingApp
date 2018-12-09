@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChildren, QueryList, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChildren, QueryList, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { User } from '../models/user';
 import { ChatMessageService } from '../services/chat-message.service';
@@ -13,7 +13,7 @@ import { ChatMessageToDisplay } from '../models/chat-message-to-display';
     templateUrl: './messages.component.html',
     styleUrls: ['./messages.component.css']
 })
-export class MessagesComponent implements OnInit, AfterViewInit {
+export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     messageThreads: Map<string, MessageThread> = new Map<string, MessageThread>();
     selectedThread: MessageThread;
     selectedUserAvatar: string;
@@ -43,10 +43,16 @@ export class MessagesComponent implements OnInit, AfterViewInit {
         } );
     }
 
+    ngOnDestroy() {
+        if (this.authService.loggedIn()) {
+            this.messageService.performCleanUp();
+        }
+    }
+
     private processIncomingNewMessage(message: ChatMessage) {
         const messageThreadKey: string = message.threadId;
         const messageThread: MessageThread = this.messageThreads.get(messageThreadKey);
-        if (this.selectedThread.id === message.threadId) {
+        if (this.selectedThread !== undefined && this.selectedThread.id === message.threadId) {
             this.messages.push(message);
         } else {
             messageThread.unreadMessageCount += 1;
@@ -92,6 +98,10 @@ export class MessagesComponent implements OnInit, AfterViewInit {
 
     selectUserForConversation(thread: MessageThread): void {
         if (this.selectedThread === undefined || thread.id !== this.selectedThread.id) {
+            let previousSelectedUserId: number;
+            if (this.selectedThread !== undefined) {
+                previousSelectedUserId = this.selectedThread.participant.id;
+            }
             this.selectedThread = thread;
             if (this.selectedThread.participant.avatar !== null) {
                 this.selectedUserAvatar = this.selectedThread.participant.avatar.url;
@@ -101,6 +111,17 @@ export class MessagesComponent implements OnInit, AfterViewInit {
             this.pendingMessageContent = '';
             this.loadMessages(thread.id);
             this.markMessageThreadAsRead(thread.id);
+            this.switchUserFocus(previousSelectedUserId);
+        }
+    }
+
+    private switchUserFocus(previousSelectedUserId: number): void {
+        if (previousSelectedUserId !== undefined) {
+            this.messageService.unfocusOnUser(previousSelectedUserId).then(() => {
+                this.messageService.focusOnUser(this.selectedThread.participant.id);
+            });
+        } else {
+            this.messageService.focusOnUser(this.selectedThread.participant.id);
         }
     }
 
@@ -114,6 +135,7 @@ export class MessagesComponent implements OnInit, AfterViewInit {
         const threadSelected: MessageThread = this.messageThreads.get(threadId);
         threadSelected.unreadMessageCount = 0;
         this.messageThreads.set(threadId, threadSelected);
+        this.messageService.markThreadAsRead(threadId, threadSelected.participant.id);
     }
 
     sendMessage(): void {

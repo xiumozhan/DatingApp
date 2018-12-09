@@ -10,20 +10,19 @@ import { ChatMessage } from '../models/chat-message';
 })
 export class ChatMessageService {
     private hubConnection: HubConnection;
+    private userTalkingTo: number;
 
     constructor(private authService: AuthService) { }
 
     public setupConnectionToMessageHub(): void {
-        if (this.hubConnection !== null) {
-            this.hubConnection = new signalR.HubConnectionBuilder()
-                .configureLogging(signalR.LogLevel.Trace)
-                .withUrl('http://localhost:5000/hub/privatechat', {
-                    transport: 0,
-                    accessTokenFactory: () => localStorage.getItem('token')
-                })
-                .build();
-            this.hubConnection.start();
-        }
+        this.hubConnection = new signalR.HubConnectionBuilder()
+            .configureLogging(signalR.LogLevel.Trace)
+            .withUrl('http://localhost:5000/hub/privatechat', {
+                transport: 0,
+                accessTokenFactory: () => localStorage.getItem('token')
+            })
+            .build();
+        this.hubConnection.start();
     }
 
     public onMessageReceived(): Observable<ChatMessage> {
@@ -33,11 +32,38 @@ export class ChatMessageService {
     }
 
     public disconnectFromMessageHub(): void {
-        this.hubConnection.stop();
+        if (this.userTalkingTo !== undefined) {
+            this.unfocusOnUser(this.userTalkingTo).then(() => {
+                this.hubConnection.stop();
+            });
+        } else {
+            this.hubConnection.stop();
+        }
     }
 
     public sendPrivateMessageToUser(threadId: string, recipientId: number, messageContent: string): void {
         this.hubConnection.invoke('SendPrivateMessage', threadId, recipientId, messageContent);
     }
 
+    public markThreadAsRead(threadId: string, anotherParticipantId: number): void {
+        this.hubConnection.invoke('MarkThreadAsRead', threadId, anotherParticipantId);
+    }
+
+    public async focusOnUser(anotherParticipantId: number): Promise<any> {
+        return this.hubConnection.invoke('FocusOnThread', anotherParticipantId).then(() => {
+            this.userTalkingTo = anotherParticipantId;
+        });
+    }
+
+    public async unfocusOnUser(anotherParticipantId: number): Promise<any> {
+        return this.hubConnection.invoke('LoseFocusOnThread', anotherParticipantId).then(() => {
+            this.userTalkingTo = undefined;
+        });
+    }
+
+    public performCleanUp(): void {
+        if (this.userTalkingTo !== undefined) {
+            this.unfocusOnUser(this.userTalkingTo);
+        }
+    }
 }

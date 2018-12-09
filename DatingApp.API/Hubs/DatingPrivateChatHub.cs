@@ -23,6 +23,7 @@ namespace DatingApp.API.Hubs
         private static readonly object userFocusListLock = new object();
         private readonly string onlineStatusListenerGroupName = "OnlineStatusListeners";
         private readonly IChatRepository repository;
+        private static ConcurrentDictionary<string, int> currentFocusingUser = new ConcurrentDictionary<string, int>();
 
         public DatingPrivateChatHub(IChatRepository repository)
         {
@@ -54,14 +55,15 @@ namespace DatingApp.API.Hubs
             int userId = int.Parse(Context.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             userFocusingMessageThreads.AddOrUpdate(
                 userId,
-                new List<int>(anotherParticipantId),
+                new List<int>(new int[] { anotherParticipantId }),
                 (key, usersList) => {
                     lock (userFocusListLock)
                     {
-                        usersList.Add(userId);
+                        usersList.Add(anotherParticipantId);
                         return usersList;
                     }
                 });
+            currentFocusingUser.TryAdd(Context.ConnectionId, anotherParticipantId);
         }
 
         [HubMethodName("LoseFocusOnThread")]
@@ -75,6 +77,7 @@ namespace DatingApp.API.Hubs
                 {
                     newUsersList.Remove(anotherParticipantId);
                 }
+                currentFocusingUser.TryRemove(Context.ConnectionId, out _);
             }
         }
 
@@ -124,6 +127,10 @@ namespace DatingApp.API.Hubs
             if (currentActiveConnectionAmount == 0)
             {
                 await Clients.Group(onlineStatusListenerGroupName).SendAsync("UserGoOffline", currentUserId);
+            }
+            if (currentFocusingUser.ContainsKey(Context.ConnectionId))
+            {
+                LoseFocusOnThread(currentFocusingUser.GetValueOrDefault(Context.ConnectionId));
             }
         }
     }

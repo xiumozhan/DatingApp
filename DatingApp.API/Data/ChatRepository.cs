@@ -27,11 +27,11 @@ namespace DatingApp.API.Data
             {
                 if (message.SenderId > message.RecipientId)
                 {
-                    updateDefinition.Inc(thread => thread.ParticipantOneUnreadMessageCount, 1);
+                    updateDefinition = updateDefinition.Inc(thread => thread.ParticipantOneUnreadMessageCount, 1);
                 }
                 else
                 {
-                    updateDefinition.Inc(thread => thread.ParticipantTwoUnreadMessageCount, 1);
+                    updateDefinition = updateDefinition.Inc(thread => thread.ParticipantTwoUnreadMessageCount, 1);
                 }
             }
             await context.MessageThreads.UpdateOneAsync(

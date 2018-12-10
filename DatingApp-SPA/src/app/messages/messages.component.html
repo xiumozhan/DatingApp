@@ -15,7 +15,7 @@
                                 <div class="latest-conversation-row">
                                     <p class="conversation-name-title">{{messageThread.value.participant.knownAs}}</p>
                                     <div *ngIf="hadConversationBefore(messageThread.value)" class="latest-conversation-status">
-                                        <p class="conversation-last-time">{{messageThread.value.latestMessage.messageSent | date: 'shortTime'}}</p>
+                                        <p class="conversation-last-time">{{messageThread.value.latestMessage.messageSent | date: 'MMM d'}}</p>
                                     </div>
                                 </div>
                                 <div class="latest-conversation-row">

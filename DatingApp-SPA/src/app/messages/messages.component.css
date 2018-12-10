@@ -13,6 +13,7 @@
     border-left: 1px solid #cccfd1;
     border-right: 1px solid #cccfd1;
     float: left;
+    overflow-y: auto;
 }
 
 .message-thread-container {
@@ -125,7 +126,7 @@
 
 .message-list-container {
     height: calc(100% - 100px);
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .message-send-container {

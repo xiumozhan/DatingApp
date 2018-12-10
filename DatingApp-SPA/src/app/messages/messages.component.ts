@@ -14,7 +14,7 @@ import { ChatMessageToDisplay } from '../models/chat-message-to-display';
     styleUrls: ['./messages.component.css']
 })
 export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
-    messageThreads: Map<string, MessageThread> = new Map<string, MessageThread>();
+    messageThreads: MessageThread[] = [];
     selectedThread: MessageThread;
     selectedUserAvatar: string;
     currentUser: User;
@@ -30,9 +30,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnInit() {
         this.route.data.subscribe(data => {
-            data['messageThreads'].forEach((messageThread: MessageThread) => {
-                this.messageThreads.set(messageThread.id, messageThread);
-            });
+            this.messageThreads = data['messageThreads'];
         });
         this.currentUser = this.authService.currentUser;
         if (this.currentUser.avatar !== null) {
@@ -51,14 +49,21 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private processIncomingNewMessage(message: ChatMessage) {
         const messageThreadKey: string = message.threadId;
-        const messageThread: MessageThread = this.messageThreads.get(messageThreadKey);
-        if (this.selectedThread !== undefined && this.selectedThread.id === message.threadId) {
-            this.messages.push(message);
+        const messageThreadIndex: number = this.messageThreads.findIndex((thread: MessageThread) => thread.id === messageThreadKey);
+        if (messageThreadIndex !== -1) {
+            const messageThread: MessageThread = this.messageThreads[messageThreadIndex];
+            if (this.selectedThread !== undefined && this.selectedThread.id === message.threadId) {
+                this.messages.push(message);
+            } else {
+                messageThread.unreadMessageCount += 1;
+            }
+            messageThread.latestMessage = message;
+            this.messageThreads[messageThreadIndex] = messageThread;
         } else {
-            messageThread.unreadMessageCount += 1;
+            this.messageThreadService.getMessageThread(messageThreadKey).subscribe((thread: MessageThread) => {
+                this.messageThreads.unshift(thread);
+            });
         }
-        messageThread.latestMessage = message;
-        this.messageThreads.set(messageThreadKey, messageThread);
     }
 
     ngAfterViewInit() {
@@ -132,9 +137,10 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private markMessageThreadAsRead(threadId: string) {
-        const threadSelected: MessageThread = this.messageThreads.get(threadId);
+        const threadIndex: number = this.messageThreads.findIndex((thread: MessageThread) => thread.id === threadId);
+        const threadSelected: MessageThread = this.messageThreads[threadIndex];
         threadSelected.unreadMessageCount = 0;
-        this.messageThreads.set(threadId, threadSelected);
+        this.messageThreads[threadIndex] = threadSelected;
         this.messageService.markThreadAsRead(threadId, threadSelected.participant.id);
     }
 
@@ -167,6 +173,22 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
     hadConversationBefore(thread: MessageThread): boolean {
         return thread.latestMessage !== null;
+    }
+
+    orderByLatestMessageSentTime(): MessageThread[] {
+        return this.messageThreads.sort((thisThread: MessageThread, thatThread: MessageThread) => {
+            if (thisThread.latestMessage === null && thatThread.latestMessage === null) {
+                return 0;
+            }
+            if (thisThread.latestMessage !== null && thatThread.latestMessage === null) {
+                return -1;
+            }
+            if (thisThread.latestMessage === null && thatThread.latestMessage !== null) {
+                return 1;
+            }
+            return thisThread.latestMessage.messageSent < thatThread.latestMessage.messageSent ?
+                1 : thisThread.latestMessage.messageSent < thatThread.latestMessage.messageSent ? 0 : -1;
+        });
     }
 
 }

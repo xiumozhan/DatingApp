@@ -19,8 +19,8 @@ export class ChatMessageThreadService {
             `${this.baseUrl}users/${this.authService.decodedToken.nameid}/chat/thread`);
     }
 
-    getMessageThread(threadId: string): Observable<MessageThread[]> {
-        return this.http.get<MessageThread[]>(
+    getMessageThread(threadId: string): Observable<MessageThread> {
+        return this.http.get<MessageThread>(
             `${this.baseUrl}users/${this.authService.decodedToken.nameid}/chat/thread/${threadId}`);
     }
 

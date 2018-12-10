@@ -2,26 +2,26 @@
     <div class="message-container">
         <div class="conversation-container">
             <ul>
-                <li *ngFor="let messageThread of messageThreads | keyvalue" class="conversation-listitem">
+                <li *ngFor="let messageThread of orderByLatestMessageSentTime()" class="conversation-listitem">
                     <a class="conversation-link" 
-                        [ngClass]="{active: isSelected(messageThread.value)}" 
-                        (click)="selectUserForConversation(messageThread.value)">
+                        [ngClass]="{active: isSelected(messageThread)}" 
+                        (click)="selectUserForConversation(messageThread)">
                         <div class="conversation-avatar-card">
-                            <img src="{{messageThread.value.participant.avatar !== null ? 
-                                messageThread.value.participant.avatar.url : '../../../assets/user.png'}}" alt="">
+                            <img src="{{messageThread.participant.avatar !== null ? 
+                                messageThread.participant.avatar.url : '../../../assets/user.png'}}" alt="">
                         </div>
                         <div class="conversation-name-card">
                             <div class="conversation-name-message-container">
                                 <div class="latest-conversation-row">
-                                    <p class="conversation-name-title">{{messageThread.value.participant.knownAs}}</p>
-                                    <div *ngIf="hadConversationBefore(messageThread.value)" class="latest-conversation-status">
-                                        <p class="conversation-last-time">{{messageThread.value.latestMessage.messageSent | date: 'MMM d'}}</p>
+                                    <p class="conversation-name-title">{{messageThread.participant.knownAs}}</p>
+                                    <div *ngIf="hadConversationBefore(messageThread)" class="latest-conversation-status">
+                                        <p class="conversation-last-time">{{messageThread.latestMessage.messageSent | date: 'MMM d'}}</p>
                                     </div>
                                 </div>
                                 <div class="latest-conversation-row">
-                                    <p class="latest-conversation-preview">{{messageThread.value.latestMessage?.messageContent}}</p>
-                                    <div *ngIf="hasUnreadMessage(messageThread.value)" class="latest-conversation-status">
-                                        <p class="unread-count">{{messageThread.value.unreadMessageCount}}</p>
+                                    <p class="latest-conversation-preview">{{messageThread.latestMessage?.messageContent}}</p>
+                                    <div *ngIf="hasUnreadMessage(messageThread)" class="latest-conversation-status">
+                                        <p class="unread-count">{{messageThread.unreadMessageCount}}</p>
                                     </div>
                                 </div>
                             </div>

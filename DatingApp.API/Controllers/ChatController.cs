@@ -46,7 +46,7 @@ namespace DatingApp.API.Controllers
                 messageThread.ParticipantTwo: messageThread.ParticipantOne;
             var anotherParticipant = mapper.Map<UserForListDto>(await datingRepository.GetUser(anotherParticipantId));
             var unreadMessageCount = userId == messageThread.ParticipantOne? 
-                messageThread.ParticipantTwoUnreadMessageCount: messageThread.ParticipantOneUnreadMessageCount;
+                messageThread.ParticipantOneUnreadMessageCount: messageThread.ParticipantTwoUnreadMessageCount;
             var messageThreadToReturn = mapper.Map<MessageThreadForReturnDto>(
                 messageThread,
                 option => {

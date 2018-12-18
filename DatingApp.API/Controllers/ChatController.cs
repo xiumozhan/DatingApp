@@ -117,8 +117,8 @@ namespace DatingApp.API.Controllers
             return Ok(messageThreadsToReturn);
         }
 
-        [HttpPost("thread")]
-        public async Task<IActionResult> CreateMessageThread(int userId,
+        [HttpPut("thread")]
+        public async Task<IActionResult> CreateNewOrRetrieveExistingMessageThread(int userId,
             [FromBody]CreateMessageThreadParams createMessageThreadParams)
         {
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
@@ -139,6 +139,21 @@ namespace DatingApp.API.Controllers
             var isUserParticipantOne = userId < anotherParticipantId;
             var participantOneId = isUserParticipantOne? userId : anotherParticipantId;
             var participantTwoId = isUserParticipantOne? anotherParticipantId : userId;
+            var retrievedMessageThread = await chatRepository.GetMessageThread(participantOneId, participantTwoId, isUserParticipantOne);
+            if (retrievedMessageThread != null)
+            {
+                var unreadMessageCount = isUserParticipantOne?
+                    retrievedMessageThread.ParticipantOneUnreadMessageCount: retrievedMessageThread.ParticipantTwoUnreadMessageCount;
+                return Ok(
+                    mapper.Map<MessageThreadForReturnDto>(
+                        retrievedMessageThread,
+                        option => {
+                            option.Items["AnotherParticipant"] = mapper.Map<UserForListDto>(anotherParticipant);
+                            option.Items["UnreadMessageCount"] = unreadMessageCount;
+                        }
+                    )
+                );
+            }
             var newMessageThread = new MessageThread()
             {
                 ParticipantOne = participantOneId,

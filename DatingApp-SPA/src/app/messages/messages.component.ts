@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit, ViewChildren, QueryList, ElementRef, ViewChild, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, Params } from '@angular/router';
 import { User } from '../models/user';
 import { ChatMessageService } from '../services/chat-message.service';
 import { ChatMessage } from '../models/chat-message';
@@ -25,20 +25,50 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     @ViewChild('messageList', { read: ElementRef }) messageList: ElementRef;
     @ViewChildren('messageItem', { read: ElementRef }) messageItems: QueryList<ElementRef>;
 
-    constructor(private route: ActivatedRoute, private messageService: ChatMessageService,
-        private authService: AuthService, private messageThreadService: ChatMessageThreadService) { }
+    constructor(private activatedRoute: ActivatedRoute, private messageService: ChatMessageService,
+        private authService: AuthService, private messageThreadService: ChatMessageThreadService, private router: Router) { }
 
     ngOnInit() {
-        this.route.data.subscribe(data => {
+        this.activatedRoute.data.subscribe(data => {
             this.messageThreads = data['messageThreads'];
         });
         this.currentUser = this.authService.currentUser;
         if (this.currentUser.avatar !== null) {
             this.currentUserAvatar = this.currentUser.avatar.url;
         }
-        this.messageService.onMessageReceived().subscribe( (message: ChatMessage) => {
-            this.processIncomingNewMessage(message);
-        } );
+        this.messageService.isConnectionCurrentlyEstablished.subscribe((isConnected: boolean) => {
+            if (isConnected) {
+                this.activatedRoute.queryParams.subscribe((params: Params) => {
+                    this.selectConversationFromQueryParams(params);
+                });
+                this.messageService.onMessageReceived().subscribe( (message: ChatMessage) => {
+                    this.processIncomingNewMessage(message);
+                } );
+            }
+        });
+    }
+
+    private selectConversationFromQueryParams(params: Params) {
+        const selectedThreadIdFromQueryParams: string = params['threadId'];
+        if (selectedThreadIdFromQueryParams !== undefined) {
+            const messageThreadIndex: number = this.messageThreads.findIndex(
+                (thread: MessageThread) => thread.id === selectedThreadIdFromQueryParams);
+            if (messageThreadIndex !== -1) {
+                this.focusOnParticularConversation(this.messageThreads[messageThreadIndex]);
+            }
+        } else {
+            this.removeFocusOnUser();
+        }
+    }
+
+    private removeFocusOnUser() {
+        if (this.selectedThread !== undefined) {
+            this.messageService.unfocusOnUser(this.selectedThread.participant.id).then(() => {
+                this.messages = [];
+                this.selectedThread = undefined;
+                this.selectedUserAvatar = null;
+            });
+        }
     }
 
     ngOnDestroy() {
@@ -102,6 +132,14 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     selectUserForConversation(thread: MessageThread): void {
+        this.router.navigate([], {
+            relativeTo: this.activatedRoute,
+            queryParams: { threadId: thread.id },
+            queryParamsHandling: 'merge'
+        });
+    }
+
+    private focusOnParticularConversation(thread: MessageThread) {
         if (this.selectedThread === undefined || thread.id !== this.selectedThread.id) {
             let previousSelectedUserId: number;
             if (this.selectedThread !== undefined) {

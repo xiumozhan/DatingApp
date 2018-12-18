@@ -51,6 +51,22 @@ namespace DatingApp.API.Data
             return messageThread;
         }
 
+        public async Task<MessageThread> GetMessageThread(int participantOneId, int participantTwoId, bool isUserParticipantOne)
+        {
+            UpdateDefinition<MessageThread> updateDefinition;
+            if (isUserParticipantOne)
+            {
+                updateDefinition = new UpdateDefinitionBuilder<MessageThread>().Set(thread => thread.VisibleToParticipantOne, true);
+            }
+            else
+            {
+                updateDefinition = new UpdateDefinitionBuilder<MessageThread>().Set(thread => thread.VisibleToParticipantTwo, true);
+            }
+            return await context.MessageThreads.FindOneAndUpdateAsync(
+                thread => thread.ParticipantOne == participantOneId && thread.ParticipantTwo == participantTwoId,
+                updateDefinition);
+        }
+
         public async Task<List<MessageThread>> GetMessageThreadsOfUser(int userId)
         {
             return await context.MessageThreads

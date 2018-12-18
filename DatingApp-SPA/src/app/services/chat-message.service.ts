@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HubConnection } from '@aspnet/signalr';
 import * as signalR from '@aspnet/signalr';
 import { AuthService } from './auth.service';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { ChatMessage } from '../models/chat-message';
 
 @Injectable({
@@ -11,6 +11,8 @@ import { ChatMessage } from '../models/chat-message';
 export class ChatMessageService {
     private hubConnection: HubConnection;
     private userTalkingTo: number;
+    private isConnectionEstablished: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    isConnectionCurrentlyEstablished: Observable<boolean> = this.isConnectionEstablished.asObservable();
 
     constructor(private authService: AuthService) { }
 
@@ -22,7 +24,9 @@ export class ChatMessageService {
                 accessTokenFactory: () => localStorage.getItem('token')
             })
             .build();
-        this.hubConnection.start();
+        this.hubConnection.start().then(() => {
+            this.isConnectionEstablished.next(true);
+        });
     }
 
     public onMessageReceived(): Observable<ChatMessage> {

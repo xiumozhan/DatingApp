@@ -11,6 +11,7 @@ namespace DatingApp.API.Data
         Task CreateNewMessageThread(MessageThread messageThread);
         Task<List<MessageThread>> GetMessageThreadsOfUser(int userId);
         Task<MessageThread> GetMessageThread(ObjectId threadId);
+        Task<MessageThread> GetMessageThread(int participantOneId, int participantTwoId, bool isUserParticipantOne);
         Task MarkThreadAsRead(ObjectId threadId, int userId, int anotherParticipantId);
     }
 }

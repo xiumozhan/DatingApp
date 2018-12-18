@@ -24,8 +24,8 @@ export class ChatMessageThreadService {
             `${this.baseUrl}users/${this.authService.decodedToken.nameid}/chat/thread/${threadId}`);
     }
 
-    startMessageThread(anotherParticipantId: number): Observable<any> {
-        return this.http.post(
+    startMessageThread(anotherParticipantId: number): Observable<MessageThread> {
+        return this.http.put<MessageThread>(
             `${this.baseUrl}users/${this.authService.decodedToken.nameid}/chat/thread`,
             {anotherParticipantId: anotherParticipantId});
     }

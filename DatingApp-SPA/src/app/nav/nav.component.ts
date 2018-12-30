@@ -13,6 +13,7 @@ import { ChatMessageService } from '../services/chat-message.service';
 export class NavComponent implements OnInit {
     model: any = {};
     avatarUrl: string;
+    unreadMessageCount = 0;
 
     constructor(public authService: AuthService, private alertify: AlertifyService,
         private router: Router, private sessionWatchService: SessionWatchService, private chatMessageService: ChatMessageService) { }
@@ -20,6 +21,13 @@ export class NavComponent implements OnInit {
     ngOnInit() {
         this.authService.currentAvatarUrl.subscribe(photoUrl => {
             this.avatarUrl = photoUrl || this.authService.emptyPhotoUrl;
+        });
+        this.chatMessageService.isConnectionCurrentlyEstablished.subscribe((isConnected: boolean) => {
+            if (isConnected) {
+                this.chatMessageService.onTotalUnreadMessageCountReceived().subscribe((unreadMessageCount: number) => {
+                    this.unreadMessageCount = unreadMessageCount;
+                });
+            }
         });
     }
 

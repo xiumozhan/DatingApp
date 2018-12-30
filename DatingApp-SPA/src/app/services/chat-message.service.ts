@@ -35,6 +35,12 @@ export class ChatMessageService {
         }));
     }
 
+    public onTotalUnreadMessageCountReceived(): Observable<number> {
+        return new Observable<number>(observer => this.hubConnection.on('ReceiveTotalUnreadMessageCount', (count: number) => {
+            observer.next(count);
+        }));
+    }
+
     public disconnectFromMessageHub(): void {
         if (this.userTalkingTo !== undefined) {
             this.unfocusOnUser(this.userTalkingTo).then(() => {

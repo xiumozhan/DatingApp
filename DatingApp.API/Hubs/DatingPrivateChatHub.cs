@@ -46,7 +46,15 @@ namespace DatingApp.API.Hubs
         public async Task MarkThreadAsRead(string threadId, int anotherParticipantId)
         {
             int userId = int.Parse(Context.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            await repository.MarkThreadAsRead(ObjectId.Parse(threadId), userId, anotherParticipantId);
+            int? unreadMessageTotalCountOughtToBeNotifiedToClient =
+                await repository.MarkThreadAsRead(ObjectId.Parse(threadId), userId, anotherParticipantId);
+            if (unreadMessageTotalCountOughtToBeNotifiedToClient.HasValue)
+            {
+                await Clients.Group(userId.ToString()).SendAsync(
+                    "ReceiveTotalUnreadMessageCount",
+                    unreadMessageTotalCountOughtToBeNotifiedToClient.Value
+                );
+            }
         }
 
         [HubMethodName("FocusOnThread")]
@@ -99,11 +107,19 @@ namespace DatingApp.API.Hubs
                 MessageContent = message,
                 MessageSent = messageToSave.MessageSent
             };
-            await repository.AddMessageToThread(messageToSave, ObjectId.Parse(threadId), isRecipientFocusingOnThisConversation);
-            await Task.WhenAll(new [] {
-                Clients.Group(recipientId.ToString()).SendAsync("ReceiveMessage", messageToSent ),
-                Clients.Group(senderId.ToString()).SendAsync("ReceiveMessage", messageToSent )
-            });
+            int? unreadMessageTotalCountOughtToBeNotifiedToRecipient =
+                await repository.AddMessageToThread(messageToSave, ObjectId.Parse(threadId), isRecipientFocusingOnThisConversation);
+            var tasks = new List<Task>();
+            tasks.Add(Clients.Group(recipientId.ToString()).SendAsync("ReceiveMessage", messageToSent));
+            tasks.Add(Clients.Group(senderId.ToString()).SendAsync("ReceiveMessage", messageToSent));
+            if (unreadMessageTotalCountOughtToBeNotifiedToRecipient.HasValue)
+            {
+                tasks.Add(Clients.Group(recipientId.ToString()).SendAsync(
+                    "ReceiveTotalUnreadMessageCount",
+                    unreadMessageTotalCountOughtToBeNotifiedToRecipient.Value
+                ));
+            }
+            await Task.WhenAll(tasks);
         }
 
         public override async Task OnConnectedAsync()

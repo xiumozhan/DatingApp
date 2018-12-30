@@ -13,5 +13,6 @@ namespace DatingApp.API.Data
         Task<MessageThread> GetMessageThread(ObjectId threadId);
         Task<MessageThread> GetMessageThread(int participantOneId, int participantTwoId, bool isUserParticipantOne);
         Task MarkThreadAsRead(ObjectId threadId, int userId, int anotherParticipantId);
+        Task<int> GetTotalUnreadMessageCount(int userId);
     }
 }

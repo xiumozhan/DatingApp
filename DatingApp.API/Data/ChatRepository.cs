@@ -37,6 +37,7 @@ namespace DatingApp.API.Data
             await context.MessageThreads.UpdateOneAsync(
                 thread => thread.Id.Equals(threadId),
                 updateDefinition);
+            await IncreaseTotalUnreadMessageCountByOneIfNecessary(message, !isRecipientFocusingOnThisConversation);
         }
 
         public async Task CreateNewMessageThread(MessageThread messageThread)
@@ -88,13 +89,46 @@ namespace DatingApp.API.Data
                 updateOperation = new UpdateDefinitionBuilder<MessageThread>()
                     .Set(thread => thread.ParticipantOneUnreadMessageCount, 0);
             }
-            await context.MessageThreads.UpdateOneAsync(
-                thread => thread.Id.Equals(threadId),
-                updateOperation,
-                new UpdateOptions()
-                {
-                    IsUpsert = true
-                });
+            var threadFound = await context.MessageThreads.FindOneAndUpdateAsync(thread => thread.Id.Equals(threadId), updateOperation);
+            await SubtractTotalUnreadMessageCountIfNecessary(userId, anotherParticipantId, threadFound);
+        }
+
+        private async Task SubtractTotalUnreadMessageCountIfNecessary(int userId, int anotherParticipantId, MessageThread threadFound)
+        {
+            int unreadMessageCount;
+            if (userId > anotherParticipantId)
+            {
+                unreadMessageCount = threadFound.ParticipantTwoUnreadMessageCount;
+            }
+            else
+            {
+                unreadMessageCount = threadFound.ParticipantOneUnreadMessageCount;
+            }
+            if (unreadMessageCount > 0)
+            {
+                await context.UnreadMessageStatuses.UpdateOneAsync(
+                    status => status.UserId == userId,
+                    new UpdateDefinitionBuilder<UnreadMessageStatus>().Inc(status => status.UnreadMessageTotalCount, -unreadMessageCount)
+                );
+            }
+        }
+
+        private async Task IncreaseTotalUnreadMessageCountByOneIfNecessary(Message message, bool shouldUpdate)
+        {
+            if (shouldUpdate)
+            {
+                await context.UnreadMessageStatuses.UpdateOneAsync(
+                    status => status.UserId == message.RecipientId,
+                    new UpdateDefinitionBuilder<UnreadMessageStatus>().Inc(status => status.UnreadMessageTotalCount, 1),
+                    new UpdateOptions() { IsUpsert = true }
+                );
+            }
+        }
+
+        public async Task<int> GetTotalUnreadMessageCount(int userId)
+        {
+            var unreadStatus = await context.UnreadMessageStatuses.Find(status => status.UserId == userId).Limit(1).SingleAsync();
+            return unreadStatus.UnreadMessageTotalCount;
         }
     }
 }

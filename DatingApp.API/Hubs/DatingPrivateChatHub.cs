@@ -116,6 +116,9 @@ namespace DatingApp.API.Hubs
             {
                 await Clients.Group(onlineStatusListenerGroupName).SendAsync("UserGoOnline", currentUserId);
             }
+            await Clients.Client(Context.ConnectionId).SendAsync(
+                "ReceiveTotalUnreadMessageCount",
+                await repository.GetTotalUnreadMessageCount(currentUserId));
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)

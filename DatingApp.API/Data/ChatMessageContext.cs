@@ -30,5 +30,13 @@ namespace DatingApp.API.Data
                 return mongoDatabase.GetCollection<MessageThread>("MessageThreads");
             }
         }
+
+        public IMongoCollection<UnreadMessageStatus> UnreadMessageStatuses
+        {
+            get
+            {
+                return mongoDatabase.GetCollection<UnreadMessageStatus>("UnreadMessageStatus");
+            }
+        }
     }
 }

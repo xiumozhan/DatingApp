@@ -3,13 +3,22 @@
         <a class="navbar-brand" [routerLink]="['/']" >Dating App</a>
         <ul *ngIf="loggedIn()" class="navbar-nav mr-auto">
             <li class="nav-item" routerLinkActive="active">
-                <a class="nav-link" [routerLink]="['/members']" >Matches</a>
+                <a class="nav-link" [routerLink]="['/members']" >
+                    <i class="fa fa-users fa-2x" placement="bottom" tooltip="Matches"></i>
+                </a>
             </li>
             <li class="nav-item" routerLinkActive="active">
-                <a class="nav-link" [routerLink]="['/lists']" >Lists</a>
+                <a class="nav-link" [routerLink]="['/lists']" >
+                    <i class="fa fa-heart fa-2x" placement="bottom" tooltip="Followers"></i>
+                </a>
             </li>
             <li class="nav-item" routerLinkActive="active">
-                <a class="nav-link" [routerLink]="['/messages']" >Messages</a>
+                <a class="nav-link" [routerLink]="['/messages']" >
+                    <i class="fa fa-comments fa-2x" placement="bottom" tooltip="Messages"></i>
+                </a>
+                <div *ngIf="hasUnreadMessage()" class="nav-unread-count-container">
+                    <p class="unread-count">{{unreadMessageCount}}</p>
+                </div>
             </li>
         </ul>
 

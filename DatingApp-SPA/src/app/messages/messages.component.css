@@ -111,19 +111,6 @@
     text-align: right;
 }
 
-.unread-count {
-    height: 30px;
-    min-width: 30px;
-    padding: 0 4px;
-    margin-left: 4px;
-    border-radius: 30px;
-    background-color: #0084bf;
-    text-align: center;
-    font-weight: 600;
-    font-size: 20px;
-    color: rgb(240, 232, 232);
-}
-
 .message-list-container {
     height: calc(100% - 100px);
     overflow-y: auto;

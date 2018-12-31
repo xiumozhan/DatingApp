@@ -31,6 +31,10 @@ export class NavComponent implements OnInit {
         });
     }
 
+    hasUnreadMessage(): boolean {
+        return this.unreadMessageCount > 0;
+    }
+
     login() {
         this.authService.login(this.model).subscribe(next => {
             this.alertify.success('Successfully logged in');
